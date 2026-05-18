@@ -1,5 +1,8 @@
 import soloContractor from "./blogs/solo-contractor.md?raw";
 import clientQuestion from "./blogs/client-question.md?raw";
+import genAiCompression from "./blogs/2025-01-15-ship.md?raw";
+import tabAutocomplete from "./blogs/2025-01-21-tab.md?raw";
+import mvp from "./blogs/mvp.md?raw";
 
 export type BlogPost = {
   slug: string;
@@ -31,8 +34,11 @@ type BlogSource = {
 };
 
 const sources: BlogSource[] = [
+  { slug: "2025-01-15-ship", raw: genAiCompression },
+  { slug: "2025-01-21-tab", raw: tabAutocomplete },
   { slug: "solo-contractor", raw: soloContractor },
   { slug: "client-question", raw: clientQuestion },
+  { slug: "mvp", raw: mvp },
 ];
 
 function parseFrontMatter(raw: string): { meta: ParsedFrontMatter; body: string } {

@@ -355,7 +355,6 @@ function SearchHits({
       string
     > = {
       blog: "Blogs",
-      log: "Logs",
       resume: "Resume",
       work: "Work",
     };

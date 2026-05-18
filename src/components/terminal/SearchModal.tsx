@@ -93,7 +93,6 @@ export function SearchModal({ executeCommand }: { executeCommand: (cmd: string) 
     const by: Record<string, { label: string; items: Entry[] }> = {};
     const labels: Record<SearchHit["source"], string> = {
       blog: "Blogs",
-      log: "Logs",
       resume: "Resume",
       work: "Work",
     };

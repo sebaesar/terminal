@@ -1,5 +1,4 @@
 import { blogIndex } from "./blogIndex";
-import { logsIndex } from "./logsIndex";
 import { findFileByName } from "./files";
 import { FileMeta, SampleWork, SearchHit } from "@types";
 
@@ -111,16 +110,6 @@ async function collectSearchEntries(): Promise<SurfaceEntry[]> {
   blogIndex.linesForSearch().forEach((entry) => {
     entries.push({
       source: "blog",
-      title: entry.title,
-      location: "blogs",
-      lines: entry.lines,
-      readCommand: `blogs read ${entry.slug}`,
-    });
-  });
-
-  logsIndex.linesForSearch().forEach((entry) => {
-    entries.push({
-      source: "log",
       title: entry.title,
       location: "blogs",
       lines: entry.lines,

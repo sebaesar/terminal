@@ -32,7 +32,6 @@ import { formatBytes, formatMtime, resolveFileMeta } from "@utils/fileMeta";
 import { openChat } from "@stores/chatStore";
 import { findFileByName, listFiles, listTextFiles } from "../../data/files";
 import { blogIndex } from "../../data/blogIndex";
-import { logsIndex } from "../../data/logsIndex";
 import packageJson from "../../../package.json";
 import {
   runSearch,
@@ -434,10 +433,7 @@ function renderMarkdownBox(title: string, content: string): string[] {
   return [`┌─ ${title}`, `├${horizontal}`, ...out, `└${horizontal}`];
 }
 
-type BlogSurfaceKind = "blog" | "log";
-
 type BlogSurfaceEntry = {
-  kind: BlogSurfaceKind;
   slug: string;
   title: string;
   date?: string;
@@ -447,8 +443,7 @@ type BlogSurfaceEntry = {
 };
 
 function getBlogSurfaceEntries(): BlogSurfaceEntry[] {
-  const posts = blogIndex.getAll().map((post) => ({
-    kind: "blog" as const,
+  return blogIndex.getAll().map((post) => ({
     slug: post.slug,
     title: post.title,
     date: post.date,
@@ -456,23 +451,6 @@ function getBlogSurfaceEntries(): BlogSurfaceEntry[] {
     summary: post.summary,
     body: post.body,
   }));
-
-  const logs = logsIndex.getAll().map((entry) => ({
-    kind: "log" as const,
-    slug: entry.slug,
-    title: entry.title,
-    date: entry.date,
-    tags: entry.tags,
-    summary: entry.summary,
-    body: entry.body,
-  }));
-
-  return [...posts, ...logs].sort((a, b) => {
-    if (a.date && b.date) return b.date.localeCompare(a.date);
-    if (a.date) return -1;
-    if (b.date) return 1;
-    return a.title.localeCompare(b.title);
-  });
 }
 
 function findBlogSurfaceEntry(input: string): BlogSurfaceEntry | undefined {
@@ -487,19 +465,16 @@ function findBlogSurfaceEntry(input: string): BlogSurfaceEntry | undefined {
 }
 
 function searchBlogSurfaceEntries(query: string) {
-  const hits = [
-    ...blogIndex.search(query).map((hit) => ({ ...hit, kind: "blog" as const })),
-    ...logsIndex.search(query).map((hit) => ({ ...hit, kind: "log" as const })),
-  ];
+  const hits = blogIndex.search(query);
   const entries = getBlogSurfaceEntries();
   const entryByKey = new Map(
-    entries.map((entry) => [`${entry.kind}:${entry.slug}`, entry]),
+    entries.map((entry) => [entry.slug, entry]),
   );
 
   return hits.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
-    const entryA = entryByKey.get(`${a.kind}:${a.slug}`);
-    const entryB = entryByKey.get(`${b.kind}:${b.slug}`);
+    const entryA = entryByKey.get(a.slug);
+    const entryB = entryByKey.get(b.slug);
     if (entryA?.date && entryB?.date) return entryB.date.localeCompare(entryA.date);
     return a.title.localeCompare(b.title);
   });
@@ -527,7 +502,6 @@ function toBlogLogItem(entry: BlogSurfaceEntry, mode: "summary" | "full"): LogIt
         ? [entry.summary, entry.body].filter(Boolean).join("\n\n")
         : entry.summary,
     slug: entry.slug,
-    kind: entry.kind,
   };
 }
 
@@ -948,8 +922,8 @@ An investor-ready MVP shipped in 10 days for under $300, avoiding a larger upfro
       }
       if (searchTerm) {
         const hits = searchBlogSurfaceEntries(searchTerm);
-        const hitKeys = new Set(hits.map((hit) => `${hit.kind}:${hit.slug}`));
-        entries = entries.filter((entry) => hitKeys.has(`${entry.kind}:${entry.slug}`));
+        const hitSlugs = new Set(hits.map((hit) => hit.slug));
+        entries = entries.filter((entry) => hitSlugs.has(entry.slug));
       }
 
       if (!entries.length) {
@@ -1004,8 +978,7 @@ An investor-ready MVP shipped in 10 days for under $300, avoiding a larger upfro
 
       const lines = hits.map((hit) => {
         const summary = hit.summary ? ` — ${hit.summary}` : "";
-        const source = hit.kind === "log" ? "log" : "blog";
-        return `  ${hit.slug.padEnd(18)} (${hit.score}) [${source}] ${hit.title}${summary}`;
+        return `  ${hit.slug.padEnd(18)} (${hit.score}) [blog] ${hit.title}${summary}`;
       });
       return ["blogs search results:", ...lines];
     }

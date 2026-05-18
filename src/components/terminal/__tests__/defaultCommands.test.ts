@@ -145,6 +145,7 @@ describe("default commands", () => {
     const listSummary = JSON.stringify(listLines);
     expect(listSummary).toContain("Why I Choose to Work as a Solo Contractor");
     expect(listSummary).toContain("Improved Tab autocompletion");
+    expect(listSummary).toContain("Building an MVP");
     expect(listSummary).toContain("\"type\":\"logs\"");
 
     const readOut = await blogsHandler?.({
@@ -228,7 +229,7 @@ describe("default commands", () => {
     expect(JSON.stringify(readOut)).toContain("Security Triage Automation");
   });
 
-  it("lists and reads logs from markdown", async () => {
+  it("keeps logs as an alias for consolidated blog markdown", async () => {
     const { registry, model } = buildRegistry();
     const logsHandler = registry.get("logs")?.handler;
     expect(logsHandler).toBeTruthy();
@@ -243,6 +244,7 @@ describe("default commands", () => {
     const logsSummary = JSON.stringify(listLines);
     expect(logsSummary).toContain("70% fewer Gen AI tokens in a hot path");
     expect(logsSummary).toContain("Improved Tab autocompletion");
+    expect(logsSummary).toContain("Building an MVP");
 
     const readOut = await logsHandler?.({
       args: ["read", "2025-01-21-tab"],

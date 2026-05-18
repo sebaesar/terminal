@@ -100,7 +100,6 @@ export type LogItem = {
   note: string;
   body?: string;
   slug?: string;
-  kind?: "log" | "blog";
 };
 
 export type LogSegment = {
@@ -149,7 +148,7 @@ export type MarkdownSegment = {
 
 export type SearchHit = {
   id: string;
-  source: "blog" | "log" | "resume" | "work";
+  source: "blog" | "resume" | "work";
   title: string;
   location: string;
   lineNumber: number;
