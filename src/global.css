@@ -858,6 +858,7 @@
   }
 
   @keyframes intro-avatar-float-position {
+
     0%,
     100% {
       transform: translate3d(0, 4px, 0);
@@ -869,6 +870,7 @@
   }
 
   @keyframes intro-avatar-breathe-size {
+
     0%,
     100% {
       scale: var(--intro-avatar-breathe-min);
@@ -1822,14 +1824,14 @@
     transform-origin: 40% 50%;
   }
 
-  .t-searchGroup[open] > .t-searchGroupHead .t-searchCaret,
-  .t-searchHit[open] > .t-searchHead .t-searchCaret {
+  .t-searchGroup[open]>.t-searchGroupHead .t-searchCaret,
+  .t-searchHit[open]>.t-searchHead .t-searchCaret {
     transform: rotate(0deg);
     color: var(--text);
   }
 
-  .t-searchGroup:not([open]) > .t-searchGroupHead .t-searchCaret,
-  .t-searchHit:not([open]) > .t-searchHead .t-searchCaret {
+  .t-searchGroup:not([open])>.t-searchGroupHead .t-searchCaret,
+  .t-searchHit:not([open])>.t-searchHead .t-searchCaret {
     transform: rotate(-90deg);
   }
 
@@ -1973,7 +1975,7 @@
 
   .terminal-askAi:hover,
   .terminal-askAi:focus-visible {
-    transform: translateX(-50%) translateY(1.2px) scale(0.995);
+    transform: translateY(1.2px) scale(0.995);
     filter: brightness(1.03);
     border-color: var(--terminal-askai-hover-border);
     background: var(--terminal-askai-hover-bg);
@@ -1983,7 +1985,7 @@
   }
 
   .terminal-askAi:active {
-    transform: translateX(-50%) translateY(3px) scale(0.99);
+    transform: translateY(3px) scale(0.99);
     filter: brightness(0.98);
     border-color: var(--terminal-askai-active-border);
     background: var(--terminal-askai-active-bg);
