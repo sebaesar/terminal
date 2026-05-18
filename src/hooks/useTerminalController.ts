@@ -748,19 +748,19 @@ export function useTerminalController(props: TerminalProps): ControllerReturn {
       setLinesFromModel();
     }
 
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("run");
-      window.history.replaceState({}, "", url.toString());
-    } catch {
-      /* ignore */
-    }
-
     cancelIntroTyping();
     setShowIntroInput(true);
     focusInput();
 
     const runSequence = async () => {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("run");
+        window.history.replaceState({}, "", url.toString());
+      } catch {
+        /* ignore */
+      }
+
       suppressHistoryRef.current = true;
       for (const cmd of commands) {
         executeCommand(cmd);
@@ -772,7 +772,10 @@ export function useTerminalController(props: TerminalProps): ControllerReturn {
       suppressHistoryRef.current = false;
     };
 
-    void runSequence();
+    const runTimer = window.setTimeout(() => {
+      void runSequence();
+    }, 0);
+    typingTimersRef.current = [...typingTimersRef.current, runTimer];
     return true;
   }, [
     cancelIntroTyping,
