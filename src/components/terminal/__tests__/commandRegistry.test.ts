@@ -57,4 +57,20 @@ describe("CommandRegistry", () => {
             })
         ).toEqual(["read post-a", "read post-b"]);
     });
+
+    it("resolves aliases to the canonical command entry", () => {
+        const registry = new CommandRegistry();
+        const handler = () => "blogs";
+        registry
+            .register("blogs", handler, { subcommands: ["list", "read"] })
+            .alias("blog", "blogs", { desc: "alias for blogs" });
+
+        expect(registry.get("blog")).toBe(registry.get("blogs"));
+        expect(registry.getCanonicalName("blog")).toBe("blogs");
+        expect(registry.suggestSubcommands("blog", "r")).toEqual(["read"]);
+        expect(registry.list()).toContainEqual({
+            name: "blog",
+            desc: "alias for blogs",
+        });
+    });
 });

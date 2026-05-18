@@ -1024,6 +1024,11 @@ An investor-ready MVP shipped in 10 days for under $300, avoiding a larger upfro
       )
       .map((title) => `read ${title}`);
   };
+  const blogCommandMeta = {
+    desc: "blogs list/read/search/tags",
+    subcommands: ["list", "read", "search", "tags"],
+    subcommandSuggestions: blogsSubcommandSuggestions,
+  };
 
   const helpHandler = ({
     registry: registryContext,
@@ -1354,7 +1359,7 @@ An investor-ready MVP shipped in 10 days for under $300, avoiding a larger upfro
 
   registry
     .register("help", helpHandler, { desc: "show commands" })
-    .register("?", helpHandler, { desc: "show commands (alias)" })
+    .alias("?", "help", { desc: "show commands (alias)" })
     .register(
       "about",
       () => {
@@ -1390,16 +1395,9 @@ An investor-ready MVP shipped in 10 days for under $300, avoiding a larger upfro
       },
       { desc: "short bio" },
     )
-    .register("blogs", blogsHandler, {
-      desc: "blogs list/read/search/tags",
-      subcommands: ["list", "read", "search", "tags"],
-      subcommandSuggestions: blogsSubcommandSuggestions,
-    })
-    .register("blog", blogsHandler, {
-      desc: "alias for blogs",
-      subcommands: ["list", "read", "search", "tags"],
-      subcommandSuggestions: blogsSubcommandSuggestions,
-    })
+    .register("blogs", blogsHandler, blogCommandMeta)
+    .alias("blog", "blogs", { desc: "alias for blogs" })
+    .alias("logs", "blogs", { desc: "alias for blogs" })
     .register(
       "contact",
       () => {
@@ -1532,10 +1530,7 @@ An investor-ready MVP shipped in 10 days for under $300, avoiding a larger upfro
       desc: "search blogs, selected cases, and resume text",
       subcommands: [],
     })
-    .register("grep", searchHandler, {
-      desc: "alias for search",
-      subcommands: [],
-    })
+    .alias("grep", "search", { desc: "alias for search" })
     .register(
       "cat",
       async ({ args, model }) => {
@@ -1686,11 +1681,6 @@ An investor-ready MVP shipped in 10 days for under $300, avoiding a larger upfro
       },
       { desc: "interactive FAQ" },
     )
-    .register("logs", blogsHandler, {
-      desc: "alias for blogs",
-      subcommands: ["list", "read", "search", "tags"],
-      subcommandSuggestions: blogsSubcommandSuggestions,
-    })
     .register("whoami", whoamiHandler, { desc: "show profile card" })
     .register("theme", themeHandler, {
       desc: "apply a bundled theme (font + color)",
@@ -1838,8 +1828,6 @@ An investor-ready MVP shipped in 10 days for under $300, avoiding a larger upfro
             "blogs search <query> — ranked search",
             "blogs tags — show tag counts",
           ],
-          blog: ["alias for blogs"],
-          logs: ["alias for blogs"],
           activity: [
             "activity — show a tree/timeline style overview of selected cases and focus areas",
           ],

@@ -231,6 +231,11 @@ describe("default commands", () => {
 
   it("keeps logs as an alias for consolidated blog markdown", async () => {
     const { registry, model } = buildRegistry();
+    expect(registry.get("blog")).toBe(registry.get("blogs"));
+    expect(registry.get("logs")).toBe(registry.get("blogs"));
+    expect(registry.getCanonicalName("blog")).toBe("blogs");
+    expect(registry.getCanonicalName("logs")).toBe("blogs");
+
     const logsHandler = registry.get("logs")?.handler;
     expect(logsHandler).toBeTruthy();
 

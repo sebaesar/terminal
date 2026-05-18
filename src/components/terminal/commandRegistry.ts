@@ -7,6 +7,8 @@ import {
 
 export class CommandRegistry {
   private commands = new Map<string, CommandEntry>();
+  private aliases = new Map<string, string>();
+  private aliasMeta = new Map<string, CommandMeta>();
   private order: string[] = [];
 
   private normalize(value: string): string {
@@ -24,27 +26,47 @@ export class CommandRegistry {
     meta: CommandMeta = {}
   ): this {
     this.commands.set(name, { handler, meta });
+    this.aliases.delete(name);
+    this.aliasMeta.delete(name);
+    if (!this.order.includes(name)) this.order.push(name);
+    return this;
+  }
+
+  alias(name: string, target: string, meta: CommandMeta = {}): this {
+    const targetName = this.findRegisteredName(target);
+    if (!targetName || this.aliases.has(targetName)) {
+      throw new Error(`cannot alias ${name} to unknown command: ${target}`);
+    }
+
+    this.commands.delete(name);
+    this.aliases.set(name, targetName);
+    this.aliasMeta.set(name, meta);
     if (!this.order.includes(name)) this.order.push(name);
     return this;
   }
 
   has(name: string): boolean {
-    return this.commands.has(name);
+    const registeredName = this.findRegisteredName(name);
+    if (!registeredName) return false;
+    return this.commands.has(registeredName) || this.aliases.has(registeredName);
   }
 
   get(name: string): CommandEntry | undefined {
     const registeredName = this.findRegisteredName(name) || name;
-    return this.commands.get(registeredName);
+    const target = this.aliases.get(registeredName) || registeredName;
+    return this.commands.get(target);
   }
 
   getCanonicalName(name: string): string | undefined {
-    return this.findRegisteredName(name);
+    const registeredName = this.findRegisteredName(name);
+    if (!registeredName) return undefined;
+    return this.aliases.get(registeredName) || registeredName;
   }
 
   list(): Array<{ name: string } & CommandMeta> {
     return this.order.map((name) => ({
       name,
-      ...(this.commands.get(name)?.meta || {}),
+      ...(this.aliasMeta.get(name) || this.commands.get(name)?.meta || {}),
     }));
   }
 
@@ -62,7 +84,8 @@ export class CommandRegistry {
     const registeredName = this.findRegisteredName(command);
     if (!registeredName) return [];
 
-    const meta = this.commands.get(registeredName)?.meta;
+    const target = this.aliases.get(registeredName) || registeredName;
+    const meta = this.commands.get(target)?.meta;
     if (!meta) return [];
 
     const ctx: Partial<SubcommandSuggestContext> =
