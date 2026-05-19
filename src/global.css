@@ -2276,7 +2276,7 @@
 
   .t-proofHeader {
     max-width: 960px;
-    margin: 0 auto 12px;
+    margin: 0 0 12px;
     padding: 0 4px;
     display: flex;
     flex-direction: column;
@@ -2489,7 +2489,7 @@
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 14px;
     max-width: 960px;
-    margin: 0 auto;
+    margin: 0;
   }
 
   .t-workCard {
