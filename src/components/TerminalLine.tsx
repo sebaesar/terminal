@@ -942,25 +942,38 @@ function ActivityTree({
                     <button
                       type="button"
                       className="t-activityTreeAction"
+                      aria-label={`Run ${node.title}: ${node.command}`}
                       onClick={() => {
                         handleSelect();
                         if (node.command) executeCommand(node.command);
                       }}
                     >
-                      {node.title}
+                      <span className="t-activityTreeTitle">{node.title}</span>
+                      {node.period ? (
+                        <span className="t-activityTreePeriod">
+                          {node.period}
+                        </span>
+                      ) : null}
+                      <span className="t-activityTreeRun" aria-hidden="true">
+                        RUN
+                      </span>
                     </button>
                   ) : (
                     <button
                       type="button"
                       className="t-activityTreeTitleButton"
+                      aria-label={`Show details for ${node.title}`}
+                      aria-pressed={isActive}
                       onClick={handleSelect}
                     >
                       <span className="t-activityTreeTitle">{node.title}</span>
+                      {node.period ? (
+                        <span className="t-activityTreePeriod">
+                          {node.period}
+                        </span>
+                      ) : null}
                     </button>
                   )}
-                  {node.period ? (
-                    <span className="t-activityTreePeriod">{node.period}</span>
-                  ) : null}
                 </div>
 
                 {node.summary && isActive ? (

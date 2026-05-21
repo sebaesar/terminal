@@ -13,7 +13,9 @@ How I Tried to Restrict My Chatbot (LLAMA 3.1) to a Single Topic—and What I Le
 
 ## Introduction
 
-When working with AI chatbots, especially open-weight models like LLaMA 3, ensuring they follow strict topic boundaries is a challenge. I recently experimented with different system prompts to make my chatbot focus only on my background, skills, and career while preventing it from answering off-topic questions. Here’s what I learned.
+When working with AI chatbots, especially open-weight models like LLaMA 3, ensuring they follow strict topic boundaries is a challenge. I recently experimented with different system prompts to make my chatbot focus only on my background, skills, and career while preventing it from answering off-topic questions.
+
+That experiment is useful, but it should be framed correctly: prompt engineering is a guardrail, not a security boundary. The current [OWASP Top 10 for LLM and GenAI Applications](https://genai.owasp.org/llm-top-10/) tracks this class of risk explicitly, including `LLM01:2025 Prompt Injection` and `LLM07:2025 System Prompt Leakage`. Those categories matter here because the issue is not just "the chatbot answered the wrong topic"; the real risk is that untrusted input can alter behavior, expose hidden instructions, or influence downstream tools.
 
 ## First Attempt: Basic System Instructions
 
@@ -76,9 +78,9 @@ This showed that the model was still susceptible to **indirect prompt injection*
 
 ---
 
-## Final Attempt: Reinforced Prompt Engineering (Most Robust)
+## Final Attempt: A Stronger Prompt Layer
 
-After analyzing my failures, I refined the system instructions further:
+After analyzing my failures, I refined the system instructions further. This was stronger than the earlier versions, but it was still only a prompt-level mitigation.
 
 ### Final System Prompt Using Special Tokens
 
@@ -101,7 +103,15 @@ Holds a Master's in Cybersecurity, has been programming for the past 10 years in
 
 ### ✅ Result
 
-The chatbot now **properly refused to expose its system instructions** and redirected conversations back to my background. This was the most effective restriction I achieved—solely through prompt engineering.
+The chatbot refused to expose its system instructions in the tested cases and redirected conversations back to my background. That made the behavior better, but it did not make the application secure by itself.
+
+Prompt-only controls can still fail under more creative attacks, retrieved malicious content, tool output injection, conversation state confusion, or model behavior changes. In OWASP terms, this touches more than prompt injection: system prompt leakage, sensitive information disclosure, improper output handling, excessive agency, and unbounded consumption can all become relevant once an LLM is connected to private context, plugins, APIs, or expensive workflows.
+
+The invariant I would use now is stricter:
+
+> User-controlled text may influence the assistant's response, but it must not grant new authority, reveal privileged instructions, bypass topic boundaries, or trigger unsafe downstream actions.
+
+That invariant cannot be guaranteed by wording alone. It needs application-level controls around the model.
 
 ---
 
@@ -115,15 +125,25 @@ Now, I challenge you: **Try to break the [chatbot](/chat).** Can you find a new 
 
 1. **Basic system prompts are easily bypassed** with simple "ignore your instructions" attacks.
 2. **Special tokens (chat templates) improve instruction following**, but improper implementation can still be exploited.
-3. **Reinforcing refusal behaviors** (e.g., always redirecting to a safe response) significantly improves robustness.
-4. **AI security is an ongoing battle**—even with a well-crafted system prompt, motivated attackers may still find creative bypasses.
+3. **Reinforcing refusal behaviors** (e.g., always redirecting to a safe response) can reduce obvious leakage, but it is not a complete defense.
+4. **OWASP tracks prompt injection and system prompt leakage as first-class LLM application risks**, which means they should be handled as application security problems, not just prompt-writing problems.
+5. **AI security is an ongoing battle**—even with a well-crafted system prompt, motivated attackers may still find creative bypasses.
 
-This experiment taught me a lot about the **limits of system prompts** and why additional guardrails (like external content filtering) may be necessary for more sensitive applications.
+This experiment taught me a lot about the **limits of system prompts** and why additional guardrails are necessary for sensitive applications.
+
+For a production chatbot, I would add:
+
+- strict separation between trusted instructions and untrusted user or retrieval content
+- allowlisted tool calls with server-side authorization checks
+- output validation before rendering or executing model-generated content
+- rate limits and budget limits to contain abuse and runaway cost
+- red-team tests for prompt injection, indirect prompt injection, and system prompt leakage
+- audit logs that record refusal, tool-call, and policy-decision events without exposing secrets
 
 ---
 
 ## Next Steps
 
-I’ll continue refining these methods and experimenting with **function calling, retrieval-augmented generation (RAG), and external content moderation** to enhance security. If you're working on similar challenges, I'd love to exchange insights!
+I’ll continue refining these methods and experimenting with **function calling, retrieval-augmented generation (RAG), external content moderation, policy checks, and tool-level authorization** to enhance security. If you're working on similar challenges, I'd love to exchange insights!
 
 ### What do you think? Have you encountered similar issues with chatbot security? Let’s discuss!

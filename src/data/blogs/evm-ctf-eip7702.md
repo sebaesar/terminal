@@ -1,6 +1,6 @@
 ---
-title: "Temporarily Smart Wallets"
-date: "2025-09-11"
+title: "ETH CTF"
+date: "2024-09-11"
 description: "How I solved a CTF by turning an EOA into a temporary smart contract using EIP-7702"
 slug: evm-ctf-eip7702
 tags: ["Ethereum", "Smart Contracts", "Security"]

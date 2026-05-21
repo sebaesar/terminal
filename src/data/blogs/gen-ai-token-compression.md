@@ -56,6 +56,43 @@ Output tokens: 399
 Total tokens: 1374
 ```
 
+## What could break
+
+Compression changed the shape of the input, so the risk was not only "will it be cheaper?" It also changed the privacy boundary, the decision boundary, and the blast radius of a bad model response.
+
+The important invariant was:
+
+> Compression may remove tokens, but it must not remove the facts needed to make the same business decision safely.
+
+That created concrete failure modes:
+
+- **Privacy leak:** batching can put more user or business data into one model request. If the prompt includes personal data, internal identifiers, or sensitive commercial context, the batch becomes a larger disclosure unit.
+- **Cross-item contamination:** one item in a batch can influence the decision for another item if the prompt does not preserve strict item boundaries.
+- **Correctness loss:** prompt compression can remove edge-case details, qualifiers, timestamps, or minority signals that look redundant but change the decision.
+- **Silent drift:** a cheaper prompt can keep returning valid-looking outputs while slowly changing the decision boundary, especially when traffic mix changes.
+- **Partial batch failure:** a malformed item, timeout, or provider error can block many decisions at once instead of one.
+- **Audit gap:** if only the compressed prompt is retained, it may become impossible to explain why the model made a decision.
+
+So I treated the optimization as a reliability change, not just a cost change.
+
+The controls I would expect around this path:
+
+- redact or minimize sensitive fields before compression
+- assign a stable item ID and require one output per item ID
+- keep strict separators so the model cannot merge two records into one decision
+- keep a deterministic sample of uncompressed comparisons
+- track disagreement between compressed and original decisions
+- alert on output distribution shifts, missing item IDs, duplicate item IDs, and abnormal rejection rates
+- cap batch size so one failure does not affect the entire day
+- retry failed items individually instead of blindly replaying the whole batch
+- preserve enough audit data to explain why a decision was made without storing raw sensitive input indefinitely
+
+The acceptance test is not "the prompt is shorter." It is:
+
+> The compressed path must match the original decision often enough for the business risk, and every disagreement must be measurable, attributable, and recoverable.
+
+That means this kind of optimization needs a shadow run before rollout: send a controlled sample through both the original and compressed paths, compare outputs, inspect disagreements, and only then move traffic gradually.
+
 ## Result
 
 Without batching:
@@ -79,3 +116,4 @@ So the result was a better balance:
 - lower cost
 - no 24-hour delivery miss
 - no downstream rewrite
+- explicit privacy and correctness risk controls
