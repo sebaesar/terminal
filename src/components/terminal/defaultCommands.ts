@@ -51,7 +51,7 @@ export const DEFAULT_SUGGESTED_COMMANDS: CommandButton[] = [
   },
   {
     command: "selected_cases",
-    label: "Case studies",
+    label: "Case Studies",
     variant: "secondary",
     typing: "simulate",
   },
