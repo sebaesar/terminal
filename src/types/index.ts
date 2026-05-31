@@ -114,6 +114,18 @@ export type WorkSegment = {
   type: "work";
   items: SampleWork[];
 };
+export type OperatingModelStep = {
+  index: string;
+  title: string;
+  summary: string;
+  description: string;
+};
+export type OperatingModelSegment = {
+  type: "operatingModel";
+  kicker: string;
+  title: string;
+  steps: OperatingModelStep[];
+};
 
 export type ActivityTreeNode = {
   id: string;
@@ -179,6 +191,7 @@ export type LineSegment =
   | LogSegment
   | MarkdownSegment
   | WorkSegment
+  | OperatingModelSegment
   | ActivityTreeSegment
   | AvatarSegment
   | SearchHitsSegment;

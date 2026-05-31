@@ -17,6 +17,7 @@ import {
   AvatarSegment,
   MarkdownSegment,
   CommandButton,
+  OperatingModelSegment,
 } from "@types";
 import {
   buildAvatarSegment,
@@ -354,32 +355,43 @@ export function useTerminalController(props: TerminalProps): ControllerReturn {
       type: "markdown",
       markdown: `
 <div class="intro-hero">
-  <div class="intro-headline">I turn unclear software problems into systems teams can trust.</div>
-  <div class="intro-subline font-mono">From product idea to backend, infrastructure, integrations, security boundaries, and production reliability, I help teams ship software that is useful on day one and still understandable six months later.</div>
-    <div class="intro-proofLabel">Start here</div>
-    <div class="intro-proofList">
-    <details><summary>When to bring me in</summary>
-      <div><span class="intro-proofMetric">⯎ You have an idea but not a clear technical plan.</span></div>
-      <div><span class="intro-proofMetric">⯎ Your product works, but the system is getting fragile.</span></div>
-      <div><span class="intro-proofMetric">⯎ You need someone who can move across frontend, backend, infrastructure, security, and operations.</span></div>
-      <div><span class="intro-proofMetric">⯎ You are adding AI, automation, Web3, payments, or external integrations where mistakes become expensive.</span></div>
-    </details>
-    <details><summary>What I actually do</summary>
-      <div><span class="intro-proofMetric">⯎ Turn ambiguous needs into scoped, shippable execution plans.</span></div>
-      <div><span class="intro-proofMetric">⯎ Build frontend, backend, integrations, and operational paths together.</span></div>
-      <div><span class="intro-proofMetric">⯎ Make failure boundaries, observability, and recovery behavior explicit.</span></div>
-    </details>
-    <details><summary>How I work</summary>
-      <div><span class="intro-proofMetric">⯎ Start with the smallest useful slice and keep rollback simple.</span></div>
-      <div><span class="intro-proofMetric">⯎ Surface risks early instead of hiding them behind polish.</span></div>
-      <div><span class="intro-proofMetric">⯎ Leave behind tests, docs, and inspectable state where correctness matters.</span></div>
-    </details>
-    <details><summary>Proof</summary>
-      <div><span class="intro-proofMetric">⯎ Selected cases show cost control, reliability under load, and security triage.</span></div>
-      <div><span class="intro-proofMetric">⯎ Blog posts document failure modes, invariants, containment, and recovery.</span></div>
-    </details>
-  </div>
-</div>
+    const operatingModel: OperatingModelSegment = {
+      type: "operatingModel",
+      kicker: "OPERA",
+      title: "My operating system for product execution",
+      steps: [
+        {
+          index: "01",
+          title: "Observe",
+          summary: "Understand the business before making decisions.",
+          description: "We define what success looks like. Every engagement starts with understanding the problem, not proposing solutions. I gather context, clarify objectives, and identify constraints. This ensures every technical decision supports a business outcome rather than adding unnecessary complexity."
+        },
+        {
+          index: "02",
+          title: "Prioritize",
+          summary: "Focus on the highest-leverage work first.",
+          description: "Not every feature, integration, or improvement deserves equal attention. I evaluate opportunities, risks, dependencies, and tradeoffs to create a clear execution plan. The result is a prioritized roadmap that maximizes progress while minimizing wasted effort."
+        },
+        {
+          index: "03",
+          title: "Execute",
+          summary: "Deliver working systems with speed and discipline.",
+          description: "I own implementation from architecture to deployment. Every decision is guided by reliability, maintainability, and business impact. The goal is not simply to write code, but to deliver a working product that creates measurable value."
+        },
+        {
+          index: "04",
+          title: "Reinforce",
+          summary: "Strengthen the system before weaknesses become problem.",
+          description: "Once functionality is in place, I focus on operational resilience. Testing, automation, monitoring, deployment safeguards, documentation, and recovery procedures are implemented to reduce risk and improve predictability. The result is a system that can be trusted in production."
+        },
+        {
+          index: "05",
+          title: "Adapt",
+          summary: "Improve continuously based on real-world feedback.",
+          description: "Markets change, priorities shift, and new information emerges. I continuously evaluate outcomes, identify bottlenecks, and refine the product based on real usage and business needs. This keeps the system effective, relevant, and capable of supporting future growth."
+        },
+      ],
+    };
       `.trim(),
     };
 
@@ -418,6 +430,7 @@ export function useTerminalController(props: TerminalProps): ControllerReturn {
       ],
       primaryCtaLine,
       navCtaLine,
+      [operatingModel],
       "",
     ];
 
