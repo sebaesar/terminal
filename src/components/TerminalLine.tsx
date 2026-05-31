@@ -1,9 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { MarkdownBlock } from "@components/MarkdownBlock";
 import { SparklesCore } from "@components/ui/sparkles";
 import { useTerminalTone } from "@hooks/useTerminalTone";
 import { copyToClipboard, buildShareLink } from "@utils";
-import { ArrowUp, Clock } from "lucide-react";
+import { getClientProofAriaLabel } from "@data/clientProof";
+import { ArrowUp, Clock, Info } from "lucide-react";
 import {
   CommandSegment,
   CopySegment,
@@ -19,6 +21,9 @@ import {
   ActivityTreeNode,
   ActivityTreeSegment,
   SampleWork,
+  ClientProofItem,
+  ClientProofSegment,
+  OperatingModelSegment,
 } from "@types";
 import { DownloadIntegrity } from "./terminal/DownloadIntegrity";
 
@@ -488,6 +493,227 @@ function SearchHits({
   );
 }
 
+function OperatingModel({ segment }: { segment: OperatingModelSegment }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [openDescriptionIndex, setOpenDescriptionIndex] = useState<
+    number | null
+  >(null);
+  const headingId = "intro-operating-title";
+
+  useEffect(() => {
+    if (openDescriptionIndex === null) return;
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenDescriptionIndex(null);
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openDescriptionIndex]);
+
+  const activateStep = (index: number) => {
+    setActiveIndex(index);
+    setOpenDescriptionIndex((current) => (current === index ? current : null));
+  };
+
+  return (
+    <section className="intro-operating" aria-labelledby={headingId}>
+      <div className="intro-sectionKicker font-mono">{segment.kicker}</div>
+      <h2 id={headingId} className="intro-sectionTitle">
+        {segment.title}
+      </h2>
+      <div className="intro-operatingDeck" role="list">
+        {segment.steps.map((step, index) => {
+          const isActive = activeIndex === index;
+          const isDescriptionOpen = openDescriptionIndex === index;
+          const tooltipId = `intro-operating-${step.index}-description`;
+
+          return (
+            <div
+              key={step.index}
+              className={`intro-operatingFold${isActive ? " is-active" : ""}`}
+              role="listitem"
+              onMouseEnter={() => activateStep(index)}
+            >
+              <button
+                type="button"
+                className="intro-operatingFoldButton"
+                aria-pressed={isActive}
+                onClick={() => activateStep(index)}
+                onFocus={() => activateStep(index)}
+              >
+                <span className="intro-stepIndex font-mono">{step.index}</span>
+                <span className="intro-operatingTitle">{step.title}</span>
+              </button>
+              <span className="intro-operatingCopy" aria-hidden={!isActive}>
+                <span className="intro-operatingSummary">
+                  {step.summary}
+                </span>
+                {isActive ? (
+                  <span className="intro-descriptionAnchor">
+                    <button
+                      type="button"
+                      className="intro-descriptionButton"
+                      aria-label={`${isDescriptionOpen ? "Hide" : "Show"} ${step.title} description`}
+                      aria-expanded={isDescriptionOpen}
+                      aria-controls={tooltipId}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenDescriptionIndex((current) =>
+                          current === index ? null : index,
+                        );
+                      }}
+                    >
+                      <Info size={14} aria-hidden="true" />
+                    </button>
+                    {isDescriptionOpen ? (
+                      <span
+                        id={tooltipId}
+                        className="intro-descriptionTooltip"
+                        role="tooltip"
+                      >
+                        {step.description}
+                      </span>
+                    ) : null}
+                  </span>
+                ) : null}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ClientProofStrip({ segment }: { segment: ClientProofSegment }) {
+  const [activeClient, setActiveClient] = useState<ClientProofItem | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const headingId = "intro-client-proof-title";
+
+  useEffect(() => {
+    if (!activeClient) return;
+
+    closeButtonRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActiveClient(null);
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeClient]);
+
+  const modal =
+    activeClient && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            className="intro-clientModal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`intro-client-modal-title-${activeClient.slug}`}
+            onClick={() => setActiveClient(null)}
+          >
+            <div
+              className="intro-clientModalPanel"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                ref={closeButtonRef}
+                type="button"
+                className="intro-clientModalClose"
+                aria-label="Close client details"
+                onClick={() => setActiveClient(null)}
+              >
+                ×
+              </button>
+              <img
+                className="intro-clientModalLogo"
+                src={activeClient.logoPath}
+                alt={`${activeClient.name} logo`}
+                decoding="async"
+              />
+              <span
+                id={`intro-client-modal-title-${activeClient.slug}`}
+                className="intro-clientModalTitle"
+              >
+                {activeClient.name}
+              </span>
+              <span className="intro-clientModalRow">
+                <strong>Mission</strong>
+                {activeClient.mission}
+              </span>
+              <span className="intro-clientModalRow">
+                <strong>Outcome</strong>
+                {activeClient.outcome}
+              </span>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <>
+      <span className="intro-clientProof" aria-labelledby={headingId}>
+        <span id={headingId} className="intro-proofLabel">
+          {segment.title}
+        </span>
+        <span className="intro-clientGrid" role="list">
+          {segment.items.map((item) => {
+            const tooltipId = `intro-client-${item.slug}-tooltip`;
+            return (
+              <span
+                key={item.slug}
+                className="intro-clientSlot"
+                role="listitem"
+              >
+                <button
+                  type="button"
+                  className="intro-clientItem"
+                  aria-label={getClientProofAriaLabel(item)}
+                  aria-describedby={tooltipId}
+                  aria-haspopup="dialog"
+                  aria-expanded={activeClient?.slug === item.slug}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setActiveClient(item);
+                  }}
+                >
+                  <img
+                    src={item.logoPath}
+                    alt={`${item.name} logo`}
+                    loading="eager"
+                    decoding="async"
+                    draggable={false}
+                  />
+                  <span
+                    id={tooltipId}
+                    className="intro-clientTooltip"
+                    role="tooltip"
+                  >
+                    <span className="intro-clientTooltipTitle">
+                      {item.name}
+                    </span>
+                    <span className="intro-clientTooltipRow">
+                      <strong>Mission</strong>
+                      {item.mission}
+                    </span>
+                    <span className="intro-clientTooltipRow">
+                      <strong>Outcome</strong>
+                      {item.outcome}
+                    </span>
+                  </span>
+                </button>
+              </span>
+            );
+          })}
+        </span>
+      </span>
+      {modal}
+    </>
+  );
+}
+
 function renderSegment(
   segment: LineSegment,
   key: string,
@@ -573,6 +799,16 @@ function renderSegment(
     }
     case "work": {
       return <WorkGrid key={key} segment={segment as WorkSegment} />;
+    }
+    case "operatingModel": {
+      return (
+        <OperatingModel key={key} segment={segment as OperatingModelSegment} />
+      );
+    }
+    case "clientProof": {
+      return (
+        <ClientProofStrip key={key} segment={segment as ClientProofSegment} />
+      );
     }
     case "activityTree": {
       return (

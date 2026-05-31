@@ -17,6 +17,7 @@ import {
   AvatarSegment,
   MarkdownSegment,
   CommandButton,
+  ClientProofSegment,
   OperatingModelSegment,
 } from "@types";
 import {
@@ -29,6 +30,7 @@ import {
   simulateTypingSequence,
 } from "@utils";
 import { useTelemetry } from "@hooks/useTelemetry";
+import { CLIENT_PROOF_ITEMS, CLIENT_PROOF_TITLE } from "@data/clientProof";
 
 const isLineSegment = (value: unknown): value is LineSegment =>
   typeof value === "object" &&
@@ -355,6 +357,12 @@ export function useTerminalController(props: TerminalProps): ControllerReturn {
       type: "markdown",
       markdown: `
 <div class="intro-hero">
+  <div class="intro-trustline font-mono">Your Execution Partner</div>
+  <div class="intro-headline">Turn ideas into reliable Software products.</div>
+  <div class="intro-subline font-mono">For founder-led startups who need more than code: I own technical execution from product decisions to architecture, delivery, reliability, and day-to-day operational clarity.</div>
+</div>
+      `.trim(),
+    };
     const operatingModel: OperatingModelSegment = {
       type: "operatingModel",
       kicker: "OPERA",
@@ -392,7 +400,36 @@ export function useTerminalController(props: TerminalProps): ControllerReturn {
         },
       ],
     };
+    const proofMarkdown: MarkdownSegment = {
+      type: "markdown",
+      markdown: `
+<section class="intro-operatorProof" aria-labelledby="intro-operator-proof-title">
+  <div class="intro-sectionKicker font-mono">Operator proof</div>
+  <h2 id="intro-operator-proof-title" class="intro-sectionTitle">Proof that execution quality compounds after launch.</h2>
+  <div class="intro-proofCards">
+    <article class="intro-proofCard">
+      <span class="intro-proofCardLabel font-mono">Reliability</span>
+      <strong class="intro-proofCardMetric">65% → 92%</strong>
+      <p>Improved production reliability by simplifying failure paths, tightening ownership, and making operations measurable.</p>
+    </article>
+    <article class="intro-proofCard">
+      <span class="intro-proofCardLabel font-mono">Cost</span>
+      <strong class="intro-proofCardMetric">~60% lower infra cost</strong>
+      <p>Reduced cloud spend through architecture simplification, workload cleanup, and operational discipline.</p>
+    </article>
+    <article class="intro-proofCard">
+      <span class="intro-proofCardLabel font-mono">Security / Ownership</span>
+      <strong class="intro-proofCardMetric">~$4M secured</strong>
+      <p>Helped operate security-sensitive systems with zero major incidents over multiple years.</p>
+    </article>
+  </div>
+</section>
       `.trim(),
+    };
+    const clientProof: ClientProofSegment = {
+      type: "clientProof",
+      title: CLIENT_PROOF_TITLE,
+      items: CLIENT_PROOF_ITEMS,
     };
 
     const primaryCtaLine: LineSegment[] = [];
@@ -407,7 +444,10 @@ export function useTerminalController(props: TerminalProps): ControllerReturn {
         cmd.typing ?? "simulate",
       );
 
-      if (index === 0) {
+      if (index < 2) {
+        if (primaryCtaLine.length) {
+          primaryCtaLine.push({ type: "text", text: " " });
+        }
         primaryCtaLine.push(button);
         return;
       }
@@ -431,6 +471,8 @@ export function useTerminalController(props: TerminalProps): ControllerReturn {
       primaryCtaLine,
       navCtaLine,
       [operatingModel],
+      // [proofMarkdown],
+      [clientProof],
       "",
     ];
 
@@ -491,6 +533,10 @@ export function useTerminalController(props: TerminalProps): ControllerReturn {
             .trim();
           // Keep markdown reveal snappy so it appears alongside the CTA buttons.
           return Math.min(Math.max(plain.length, 6), 12);
+        }
+
+        if (segment.type === "clientProof") {
+          return 12;
         }
 
         // Fallback length for other rich segments so they reveal after the rest of the line.

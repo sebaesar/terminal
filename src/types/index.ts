@@ -114,12 +114,28 @@ export type WorkSegment = {
   type: "work";
   items: SampleWork[];
 };
+
+export type ClientProofItem = {
+  slug: string;
+  name: string;
+  logoPath: string;
+  mission: string;
+  outcome: string;
+};
+
+export type ClientProofSegment = {
+  type: "clientProof";
+  title?: string;
+  items: ClientProofItem[];
+};
+
 export type OperatingModelStep = {
   index: string;
   title: string;
   summary: string;
   description: string;
 };
+
 export type OperatingModelSegment = {
   type: "operatingModel";
   kicker: string;
@@ -192,6 +208,7 @@ export type LineSegment =
   | MarkdownSegment
   | WorkSegment
   | OperatingModelSegment
+  | ClientProofSegment
   | ActivityTreeSegment
   | AvatarSegment
   | SearchHitsSegment;
