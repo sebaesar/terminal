@@ -10,6 +10,11 @@ const ChatDock = lazy(() => import("@components/terminal/chat"));
 const CONTACT_EMAIL =
   import.meta.env.VITE_CONTACT_EMAIL || "onboarding@failuresmith.xyz";
 
+const focusedWindowZIndex = 80;
+const backgroundWindowZIndex = 60;
+
+type FloatingWindow = "chat" | "terminal";
+
 function safeDecodePathPart(part?: string) {
   if (!part) return undefined;
   try {
@@ -44,6 +49,8 @@ export default function App() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [chatEnabled, setChatEnabled] = useState(false);
+  const [focusedWindow, setFocusedWindow] =
+    useState<FloatingWindow | null>(null);
 
   const focusChatInput = useCallback(() => {
     let attempts = 0;
@@ -63,6 +70,7 @@ export default function App() {
 
   const handleAskAi = useCallback(() => {
     setChatEnabled(true);
+    setFocusedWindow("chat");
     openChatMaximized();
     focusChatInput();
   }, [focusChatInput]);
@@ -75,7 +83,10 @@ export default function App() {
     <>
       <LandingPage
         onAskAi={handleAskAi}
-        onOpenTerminal={() => setTerminalOpen(true)}
+        onOpenTerminal={() => {
+          setTerminalOpen(true);
+          setFocusedWindow("terminal");
+        }}
       />
       <Suspense fallback={null}>
         {terminalOpen ? (
@@ -87,12 +98,24 @@ export default function App() {
               setBookingOpen(true);
             }}
             onClose={() => setTerminalOpen(false)}
+            onActivate={() => setFocusedWindow("terminal")}
+            zIndex={
+              focusedWindow === "terminal"
+                ? focusedWindowZIndex
+                : backgroundWindowZIndex
+            }
           />
         ) : null}
         {chatEnabled ? (
           <ChatDock
             onBookCall={() => setBookingOpen(true)}
             contactEmail={CONTACT_EMAIL}
+            onActivate={() => setFocusedWindow("chat")}
+            windowZIndex={
+              focusedWindow === "chat"
+                ? focusedWindowZIndex
+                : backgroundWindowZIndex
+            }
           />
         ) : null}
         {bookingOpen ? (

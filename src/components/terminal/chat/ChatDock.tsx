@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useShallow } from "zustand/react/shallow";
 import { marked } from "marked";
 import {
@@ -40,11 +47,15 @@ const TONE_PRESETS = [
 type ChatDockProps = {
   onBookCall?: () => void;
   contactEmail?: string;
+  onActivate?: () => void;
+  windowZIndex?: number;
 };
 
 export function ChatDock({
   onBookCall,
   contactEmail = "onboarding@failuresmith.xyz",
+  onActivate,
+  windowZIndex,
 }: ChatDockProps) {
   // Select all needed slices in one selector and shallow-compare to cut down on re-renders.
   const {
@@ -389,9 +400,9 @@ export function ChatDock({
     }
   };
 
-  const wrapTransformStyle = {
+  const wrapTransformStyle: CSSProperties = {
     transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
-    opacity: isDragging ? 0.5 : 1,
+    zIndex: windowZIndex,
   };
 
   return (
@@ -402,6 +413,8 @@ export function ChatDock({
           role="dialog"
           aria-modal="false"
           onClick={focusInput}
+          onFocusCapture={onActivate}
+          onPointerDownCapture={onActivate}
           style={wrapTransformStyle}
         >
           <div className={`chat-window${isMaximized ? " is-maximized" : ""}`}>

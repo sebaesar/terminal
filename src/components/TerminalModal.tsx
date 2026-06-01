@@ -7,15 +7,19 @@ import "./TerminalModal.css";
 type TerminalModalProps = {
   contactEmail: string;
   onAskAi: () => void;
+  onActivate: () => void;
   onBookCall: () => void;
   onClose: () => void;
+  zIndex: number;
 };
 
 export default function TerminalModal({
   contactEmail,
   onAskAi,
+  onActivate,
   onBookCall,
   onClose,
+  zIndex,
 }: TerminalModalProps) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -80,7 +84,7 @@ export default function TerminalModal({
 
   const wrapTransformStyle = {
     transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
-    opacity: isDragging ? 0.5 : 1,
+    zIndex,
   };
 
   return (
@@ -92,6 +96,8 @@ export default function TerminalModal({
       aria-modal="true"
       aria-label="Terminal"
       style={wrapTransformStyle}
+      onFocusCapture={onActivate}
+      onPointerDownCapture={onActivate}
     >
       <div
         className={`chat-window terminal-modalWindow${
