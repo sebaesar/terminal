@@ -221,6 +221,10 @@
     transform: translateY(0);
   }
 
+  .intro-start-line.intro-proofLine {
+    z-index: 1;
+  }
+
   .intro-start-line+.intro-start-line {
     margin-top: 12px;
   }

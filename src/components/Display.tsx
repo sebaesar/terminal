@@ -43,7 +43,9 @@ export function Display({
             ? index - introStartLineRange.start
             : null;
         const introClassSuffix =
-          introOffset === 1
+          introOffset === 0
+            ? " intro-proofLine"
+            : introOffset === 1
             ? " intro-ctaPrimary"
             : introOffset === 2
               ? " intro-ctaNav"
