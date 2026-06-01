@@ -15,6 +15,10 @@ import {
   HeroSection,
   type HeroTrustlineState,
 } from "./landing/HeroSection";
+import {
+  getKeyboardNavigationDirection,
+  shouldIgnoreLandingKeyboardNavigation,
+} from "./landing/keyboardNavigation";
 import { LandingHeader } from "./landing/LandingHeader";
 import { RecognitionSection } from "./landing/RecognitionSection";
 import { SectionProgress } from "./landing/SectionProgress";
@@ -228,7 +232,7 @@ export default function LandingPage({
     setHeroTrustlineState("complete");
   }, []);
 
-  const advanceHeroTrustlineOnScroll = useCallback(() => {
+  const advanceHeroTrustlineOnNavigationIntent = useCallback(() => {
     if (activeSection !== "hero") return false;
 
     if (heroTrustlineState === "idle") {
@@ -297,6 +301,24 @@ export default function LandingPage({
     };
   }, [contextMenu]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const direction = getKeyboardNavigationDirection(event.key);
+      if (!direction || shouldIgnoreLandingKeyboardNavigation(event)) return;
+
+      event.preventDefault();
+      setContextMenu(null);
+
+      if (advanceHeroTrustlineOnNavigationIntent()) return;
+
+      navigateWithinActiveSurface(direction);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [advanceHeroTrustlineOnNavigationIntent, navigateWithinActiveSurface]);
+
   const openContextMenu = (event: MouseEvent<HTMLElement>) => {
     event.preventDefault();
     setContextMenu(getContextMenuPosition(event.clientX, event.clientY));
@@ -321,7 +343,7 @@ export default function LandingPage({
     if (Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
     if (wheelLockedRef.current) return;
 
-    if (advanceHeroTrustlineOnScroll()) return;
+    if (advanceHeroTrustlineOnNavigationIntent()) return;
 
     wheelDeltaRef.current += event.deltaY;
     if (Math.abs(wheelDeltaRef.current) < wheelThreshold) return;
@@ -377,7 +399,7 @@ export default function LandingPage({
     }, clickSuppressionMs);
 
     setContextMenu(null);
-    if (advanceHeroTrustlineOnScroll()) return;
+    if (advanceHeroTrustlineOnNavigationIntent()) return;
 
     navigateWithinActiveSurface(direction);
   };
