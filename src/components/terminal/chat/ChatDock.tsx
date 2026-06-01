@@ -21,8 +21,18 @@ import {
   X,
 } from "lucide-react";
 import { useChatStore } from "@stores/chatStore";
+import { useFloatingWindowResize } from "@hooks/useFloatingWindowResize";
 import { getChatActions, getChatDisplayContent } from "./chatActions";
 import "./chat.css";
+
+const chatResizeInitialSize = { width: 500, height: 500 };
+const chatResizeMinSize = { width: 360, height: 360 };
+const floatingWindowTop = 86;
+const floatingWindowRight = 18;
+const restorePointerOffsetY = 20;
+const snapToTopThreshold = 8;
+const snapViewportMargin = 8;
+const activeFloatingWindowZIndex = 90;
 
 const SUGGESTED_PROMPTS = [
   "Can you turn my uncertainty into an execution plan?",
@@ -107,6 +117,11 @@ export function ChatDock({
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const activePointerRef = useRef<number | null>(null);
   const suggestedPromptSendingRef = useRef(false);
+  const resize = useFloatingWindowResize({
+    initialSize: chatResizeInitialSize,
+    minSize: chatResizeMinSize,
+    disabled: isMaximized,
+  });
 
   const focusInput = useCallback(
     () => requestAnimationFrame(() => inputRef.current?.focus()),
@@ -180,11 +195,31 @@ export function ChatDock({
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (isMaximized) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
     const target = event.target;
     if (target instanceof Element && target.closest("button")) return;
     event.preventDefault();
+    if (isMaximized) {
+      const width = resize.size.width;
+      const height = resize.size.height;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const left = Math.min(
+        Math.max(event.clientX - width / 2, snapViewportMargin),
+        Math.max(snapViewportMargin, viewportWidth - width - snapViewportMargin),
+      );
+      const top = Math.min(
+        Math.max(event.clientY - restorePointerOffsetY, snapViewportMargin),
+        Math.max(snapViewportMargin, viewportHeight - height - snapViewportMargin),
+      );
+      const baseLeft = viewportWidth - floatingWindowRight - width;
+
+      setIsMaximized(false);
+      setDragOffset({
+        x: left - baseLeft,
+        y: top - floatingWindowTop,
+      });
+    }
     dragStartRef.current = { x: event.clientX, y: event.clientY };
     activePointerRef.current = event.pointerId;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -193,6 +228,18 @@ export function ChatDock({
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging || !dragStartRef.current) return;
+    if (
+      !isMaximized &&
+      dragStartRef.current.y > snapToTopThreshold &&
+      event.clientY <= snapToTopThreshold
+    ) {
+      if (activePointerRef.current !== null) {
+        event.currentTarget.releasePointerCapture(activePointerRef.current);
+      }
+      setIsMaximized(true);
+      resetDragState();
+      return;
+    }
     const deltaX = event.clientX - dragStartRef.current.x;
     const deltaY = event.clientY - dragStartRef.current.y;
     if (deltaX === 0 && deltaY === 0) return;
@@ -401,15 +448,21 @@ export function ChatDock({
   };
 
   const wrapTransformStyle: CSSProperties = {
+    ...resize.style,
     transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
-    zIndex: windowZIndex,
+    zIndex:
+      isDragging || resize.isResizing
+        ? activeFloatingWindowZIndex
+        : windowZIndex,
   };
 
   return (
     <>
       {isOpen && !isMinimized ? (
         <div
-          className={`chat-wrap${isMaximized ? " is-maximized" : ""}`}
+          className={`chat-wrap${isMaximized ? " is-maximized" : ""}${
+            resize.resizeEnabled ? " is-resizable" : ""
+          }`}
           role="dialog"
           aria-modal="false"
           onClick={focusInput}
@@ -501,6 +554,13 @@ export function ChatDock({
                 {loading ? <StopCircle size={18} /> : <SendIcon size={18} />}
               </button>
             </div>
+            {resize.resizeEnabled ? (
+              <div
+                className="floating-resizeHandle"
+                aria-hidden="true"
+                {...resize.resizeHandleProps}
+              />
+            ) : null}
           </div>
         </div>
       ) : null}

@@ -20,6 +20,7 @@
 
 
 .chat-window {
+  position: relative;
   background: color-mix(in srgb, var(--surface, #0a0d12) 82%, rgba(255, 255, 255, 0.08));
   border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
   border-radius: 20px;
@@ -31,6 +32,15 @@
   color: var(--text, #eaf1fb);
   display: flex;
   flex-direction: column;
+}
+
+.chat-wrap.is-resizable > .chat-window {
+  width: 100%;
+  height: 100%;
+}
+
+.chat-wrap.is-resizable .chat-body {
+  max-height: none;
 }
 
 .chat-window.is-maximized {
@@ -522,6 +532,29 @@
   box-shadow: var(--press-shadow-half, var(--press-shadow-rest));
 }
 
+.floating-resizeHandle {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 22px;
+  height: 22px;
+  cursor: nwse-resize;
+  touch-action: none;
+  z-index: 3;
+}
+
+.floating-resizeHandle::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid color-mix(in srgb, var(--text, #eaf1fb) 58%, transparent);
+  border-bottom: 2px solid color-mix(in srgb, var(--text, #eaf1fb) 58%, transparent);
+  opacity: 0.72;
+}
+
 @media (max-width: 640px) {
   .chat-wrap {
     left: 10px;
@@ -533,6 +566,14 @@
 
   .chat-window {
     height: 100%;
+  }
+
+  .chat-wrap.is-resizable > .chat-window {
+    width: auto;
+  }
+
+  .floating-resizeHandle {
+    display: none;
   }
 
   .chat-body {
