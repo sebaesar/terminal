@@ -25,6 +25,13 @@ export function WorkSection({
 }: WorkSectionProps) {
   const shouldReduceMotion = useReducedMotion();
   const activeCaseStudy = caseStudies[activeCaseStudyIndex] ?? caseStudies[0];
+  const activeProgressIndex = activeCaseStudy
+    ? caseStudies.indexOf(activeCaseStudy)
+    : -1;
+  const activeProgressLabel =
+    activeProgressIndex >= 0
+      ? `Case study ${activeProgressIndex + 1} of ${caseStudies.length}`
+      : "No case studies available";
 
   return (
     <section
@@ -42,6 +49,23 @@ export function WorkSection({
         </header>
 
         <div className="landing-caseList" aria-live="polite">
+          {caseStudies.length > 0 ? (
+            <div className="landing-caseProgress">
+              <span className="landing-srOnly">{activeProgressLabel}</span>
+              <div className="landing-caseProgressTrack" aria-hidden="true">
+                {caseStudies.map((caseStudy, index) => (
+                  <span
+                    className="landing-caseProgressDot"
+                    data-active={
+                      index === activeProgressIndex ? "true" : undefined
+                    }
+                    key={`${caseStudy.before}-${caseStudy.after}`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           {activeCaseStudy ? (
             <AnimatePresence initial={false} mode="wait">
               <motion.article

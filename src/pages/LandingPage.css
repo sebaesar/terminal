@@ -283,10 +283,48 @@ body:has(.landing-page) {
   line-height: 1.08;
 }
 
+.landing-caseProgress {
+  position: relative;
+  min-height: 1rem;
+}
+
+.landing-caseProgress::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  left: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--landing-rule);
+  transform: translateY(-50%);
+}
+
+.landing-caseProgressTrack {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 1rem;
+}
+
+.landing-caseProgressDot {
+  position: relative;
+  z-index: 1;
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 1px solid var(--landing-rule);
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.landing-caseProgressDot[data-active="true"] {
+  border-color: var(--landing-accent);
+  background: var(--landing-accent);
+}
+
 .landing-caseList {
   margin-top: clamp(2rem, 5vh, 4rem);
-  border-top: 1px solid var(--landing-rule);
-  border-bottom: 1px solid var(--landing-rule);
   min-height: clamp(12rem, 24vh, 17rem);
 }
 
