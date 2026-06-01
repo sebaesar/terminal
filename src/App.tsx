@@ -1,10 +1,5 @@
-import { useState } from "react";
-import Screen from "@components/Screen";
-import BookingOverlay from "@components/BookingOverlay";
+import LandingPage from "./pages/LandingPage";
 import BlogPage from "./pages/BlogPage";
-
-const CONTACT_EMAIL =
-  import.meta.env.VITE_CONTACT_EMAIL || "onboarding@failuresmith.xyz";
 
 function safeDecodePathPart(part?: string) {
   if (!part) return undefined;
@@ -34,7 +29,6 @@ function getRoute(pathname: string) {
 }
 
 export default function App() {
-  const [bookingOpen, setBookingOpen] = useState(false);
   const route = getRoute(
     typeof window === "undefined" ? "/" : window.location.pathname,
   );
@@ -43,20 +37,5 @@ export default function App() {
     return <BlogPage slug={route.slug} />;
   }
 
-  return (
-    <>
-      <Screen
-        contact={{
-          email: CONTACT_EMAIL,
-        }}
-        onBookCall={() => setBookingOpen(true)}
-      />
-
-      <BookingOverlay
-        open={bookingOpen}
-        onClose={() => setBookingOpen(false)}
-        email={CONTACT_EMAIL}
-      />
-    </>
-  );
+  return <LandingPage />;
 }
