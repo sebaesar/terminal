@@ -1,4 +1,18 @@
-import { type MouseEvent, useEffect, useRef, useState } from "react";
+import {
+  type MouseEvent,
+  type WheelEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { AboutSection } from "./landing/AboutSection";
+import { ApproachSection } from "./landing/ApproachSection";
+import { HeroSection } from "./landing/HeroSection";
+import { LandingHeader } from "./landing/LandingHeader";
+import { RecognitionSection } from "./landing/RecognitionSection";
+import { WorkSection } from "./landing/WorkSection";
+import type { LandingSectionId } from "./landing/types";
 
 const configuredBasePath = import.meta.env.BASE_URL || "/";
 const basePath = configuredBasePath.replace(/\/$/, "");
@@ -7,70 +21,27 @@ const blogHref = `${basePath}/blog`;
 const contextMenuWidth = 180;
 const contextMenuHeight = 98;
 const contextMenuMargin = 8;
+const wheelThreshold = 60;
+const wheelLockMs = 560;
+
+const landingSectionOrder: LandingSectionId[] = [
+  "hero",
+  "recognition",
+  "approach",
+  "work",
+  "about",
+];
 
 type LandingPageProps = {
   onAskAi: () => void;
   onOpenTerminal: () => void;
 };
 
-const recognitionItems = [
-  "Managing multiple freelancers",
-  "Rebuilding the same product twice",
-  "Missing deadlines despite active development",
-  "Feeling unable to evaluate technical decisions",
-  "Watching momentum disappear into execution",
-];
-
-const caseStudies = [
-  {
-    before: "MVP",
-    after: "Paying Customers",
-    situation:
-      "A founder needed a usable product path before committing months of spend.",
-    outcome:
-      "The work narrowed to the smallest production-ready slice, with enough evidence to charge real users and continue from proof instead of opinion.",
-  },
-  {
-    before: "Prototype",
-    after: "Production System",
-    situation:
-      "The demo worked, but delivery risk lived between experiments, releases, and support.",
-    outcome:
-      "The prototype became a governed production path with explicit decisions, release checks, and visible ownership after launch.",
-  },
-  {
-    before: "Unstable Platform",
-    after: "Reliable Operations",
-    situation:
-      "A live system had become hard to trust under load, change, and operational pressure.",
-    outcome:
-      "Failure paths were bounded, recovery became inspectable, and reliability could be judged from evidence instead of reassurance.",
-  },
-];
-
-const ownershipPrinciples = [
-  {
-    title: "Decisions get named.",
-    body: "Tradeoffs, constraints, and risks are made explicit before they turn into hidden delays.",
-  },
-  {
-    title: "Delivery stays owned.",
-    body: "Planning, implementation, release, and follow-through are treated as one responsibility.",
-  },
-  {
-    title: "Reliability is visible.",
-    body: "The system should leave enough evidence to understand what happened and what needs attention.",
-  },
-];
-
-function ArrowTitle({ before, after }: { before: string; after: string }) {
-  return (
-    <span className="landing-caseTitleText">
-      <span>{before}</span>
-      <span aria-hidden="true">{"\u2192"}</span>
-      <span>{after}</span>
-    </span>
-  );
+function getInitialSectionIndex() {
+  if (typeof window === "undefined") return 0;
+  const sectionId = window.location.hash.slice(1) as LandingSectionId;
+  const index = landingSectionOrder.indexOf(sectionId);
+  return index >= 0 ? index : 0;
 }
 
 function getContextMenuPosition(clientX: number, clientY: number) {
@@ -96,15 +67,63 @@ function getContextMenuPosition(clientX: number, clientY: number) {
   };
 }
 
+function replaceHash(sectionId: LandingSectionId) {
+  if (typeof window === "undefined") return;
+  const baseUrl = `${window.location.pathname}${window.location.search}`;
+  const nextUrl = sectionId === "hero" ? baseUrl : `${baseUrl}#${sectionId}`;
+  window.history.replaceState(null, "", nextUrl);
+}
+
 export default function LandingPage({
   onAskAi,
   onOpenTerminal,
 }: LandingPageProps) {
+  const [activeIndex, setActiveIndex] = useState(getInitialSectionIndex);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
   } | null>(null);
   const firstMenuItemRef = useRef<HTMLButtonElement | null>(null);
+  const wheelDeltaRef = useRef(0);
+  const wheelLockedRef = useRef(false);
+  const wheelUnlockTimerRef = useRef<number | null>(null);
+  const activeSection = landingSectionOrder[activeIndex];
+
+  const selectSectionIndex = useCallback((nextIndex: number) => {
+    const clampedIndex = Math.min(
+      Math.max(nextIndex, 0),
+      landingSectionOrder.length - 1,
+    );
+    setActiveIndex(clampedIndex);
+    replaceHash(landingSectionOrder[clampedIndex]);
+  }, []);
+
+  const navigateToSection = useCallback(
+    (sectionId: LandingSectionId) => {
+      const nextIndex = landingSectionOrder.indexOf(sectionId);
+      if (nextIndex >= 0) selectSectionIndex(nextIndex);
+    },
+    [selectSectionIndex],
+  );
+
+  const navigateByDirection = useCallback(
+    (direction: 1 | -1) => {
+      selectSectionIndex(activeIndex + direction);
+    },
+    [activeIndex, selectSectionIndex],
+  );
+
+  useEffect(() => {
+    replaceHash(activeSection);
+  }, [activeSection]);
+
+  useEffect(() => {
+    return () => {
+      if (wheelUnlockTimerRef.current) {
+        window.clearTimeout(wheelUnlockTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!contextMenu) return;
@@ -138,126 +157,47 @@ export default function LandingPage({
     action();
   };
 
+  const handleWheel = (event: WheelEvent<HTMLElement>) => {
+    event.preventDefault();
+    setContextMenu(null);
+
+    if (Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
+    if (wheelLockedRef.current) return;
+
+    wheelDeltaRef.current += event.deltaY;
+    if (Math.abs(wheelDeltaRef.current) < wheelThreshold) return;
+
+    navigateByDirection(wheelDeltaRef.current > 0 ? 1 : -1);
+    wheelDeltaRef.current = 0;
+    wheelLockedRef.current = true;
+    wheelUnlockTimerRef.current = window.setTimeout(() => {
+      wheelLockedRef.current = false;
+    }, wheelLockMs);
+  };
+
   return (
-    <main className="landing-page" onContextMenu={openContextMenu}>
-      <section className="landing-hero" aria-labelledby="landing-title">
-        <header className="landing-header" aria-label="Primary">
-          <a className="landing-brand" href={homeHref}>
-            MILAD
-          </a>
-          <nav className="landing-nav" aria-label="Main navigation">
-            <a href="#work">Work</a>
-            <a href={blogHref}>Thinking</a>
-            <a href="#about">About</a>
-          </nav>
-        </header>
+    <main
+      className="landing-page"
+      onContextMenu={openContextMenu}
+      onWheel={handleWheel}
+    >
+      <LandingHeader
+        activeSection={activeSection}
+        blogHref={blogHref}
+        homeHref={homeHref}
+        onNavigate={navigateToSection}
+      />
 
-        <div className="landing-heroCenter">
-          <div className="landing-heroCopy">
-            <h1 id="landing-title" className="landing-title">
-              <span>You don&apos;t need another developer.</span>
-              <span>You need someone who owns execution.</span>
-            </h1>
-            <p>
-              Products stall when nobody owns technical decisions, delivery,
-              and long-term reliability.
-            </p>
-          </div>
-
-          <nav className="landing-heroActions" aria-label="Explore">
-            <a className="landing-action landing-actionPrimary" href="#approach">
-              See how I work
-            </a>
-            <a className="landing-action" href="#work">
-              Read case studies
-            </a>
-          </nav>
-        </div>
-      </section>
-
-      <section
-        className="landing-section landing-recognition"
-        aria-labelledby="recognition-title"
-      >
-        <div className="landing-sectionInner">
-          <p className="landing-kicker">Recognition</p>
-          <h2 id="recognition-title">Founders often arrive here after:</h2>
-          <ul className="landing-recognitionList">
-            {recognitionItems.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section
-        id="approach"
-        className="landing-section landing-approach"
-        aria-labelledby="approach-title"
-      >
-        <div className="landing-statement">
-          <p className="landing-kicker">Execution ownership</p>
-          <h2 id="approach-title">
-            I step in as the person responsible for execution.
-          </h2>
-        </div>
-      </section>
-
-      <section
-        id="work"
-        className="landing-section landing-work"
-        aria-labelledby="work-title"
-      >
-        <div className="landing-sectionInner">
-          <header className="landing-sectionHeader">
-            <p className="landing-kicker">Selected work</p>
-            <h2 id="work-title">
-              Case studies where ownership changed the outcome.
-            </h2>
-          </header>
-
-          <div className="landing-caseList">
-            {caseStudies.map((item) => (
-              <article
-                className="landing-caseStudy"
-                key={`${item.before}-${item.after}`}
-              >
-                <h3>
-                  <ArrowTitle before={item.before} after={item.after} />
-                </h3>
-                <div className="landing-caseBody">
-                  <p>{item.situation}</p>
-                  <p>{item.outcome}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section
-        id="about"
-        className="landing-section landing-about"
-        aria-labelledby="about-title"
-      >
-        <div className="landing-sectionInner landing-aboutGrid">
-          <div>
-            <p className="landing-kicker">Quiet credibility</p>
-            <h2 id="about-title">I work where delivery risk is the problem.</h2>
-          </div>
-          <div
-            className="landing-principles"
-            aria-label="How execution is owned"
-          >
-            {ownershipPrinciples.map((item) => (
-              <section key={item.title} className="landing-principle">
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-              </section>
-            ))}
-          </div>
-        </div>
-      </section>
+      <div className="landing-stage" aria-live="polite">
+        <HeroSection
+          hidden={activeSection !== "hero"}
+          onNavigate={navigateToSection}
+        />
+        <RecognitionSection hidden={activeSection !== "recognition"} />
+        <ApproachSection hidden={activeSection !== "approach"} />
+        <WorkSection hidden={activeSection !== "work"} />
+        <AboutSection hidden={activeSection !== "about"} />
+      </div>
 
       {contextMenu ? (
         <div
