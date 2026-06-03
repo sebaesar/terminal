@@ -318,14 +318,82 @@ body:has(.landing-page) {
 }
 
 .landing-approach {
+  --landing-approach-ease: cubic-bezier(0.19, 1, 0.22, 1);
+  position: relative;
+  isolation: isolate;
   padding-top: clamp(5rem, 12vh, 9rem);
   padding-bottom: clamp(5rem, 12vh, 9rem);
 }
 
+.landing-approach::before,
+.landing-approach::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-approach::before {
+  inset: -28% -18%;
+  background:
+    radial-gradient(
+      ellipse at 50% 58%,
+      rgba(255, 255, 255, 0.88) 0%,
+      rgba(255, 255, 255, 0.5) 22%,
+      transparent 54%
+    ),
+    linear-gradient(
+      105deg,
+      transparent 24%,
+      rgba(50, 107, 145, 0.13) 42%,
+      rgba(170, 52, 58, 0.08) 52%,
+      rgba(49, 95, 85, 0.12) 62%,
+      transparent 76%
+    );
+  opacity: 0;
+  transform: translateX(-18%) scale(0.985);
+  animation:
+    landing-approach-rescue-sweep 1700ms var(--landing-approach-ease) 40ms both;
+}
+
+.landing-approach::after {
+  top: 50%;
+  left: 50%;
+  width: min(82vw, 980px);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(49, 95, 85, 0.08),
+    rgba(49, 95, 85, 0.5),
+    rgba(50, 107, 145, 0.18),
+    transparent
+  );
+  opacity: 0;
+  transform: translate(-50%, -50%) scaleX(0);
+  transform-origin: center;
+  animation:
+    landing-approach-signal-line 1250ms var(--landing-approach-ease) 120ms both;
+}
+
 .landing-statement {
+  position: relative;
+  z-index: 1;
   width: min(100%, 980px);
   margin: 0 auto;
   text-align: center;
+}
+
+.landing-approach .landing-statement {
+  animation:
+    landing-approach-statement-arrival 1150ms var(--landing-approach-ease) 160ms both;
+  transform-origin: center;
+  will-change: filter, opacity, transform;
+}
+
+.landing-approach .landing-statement h2 {
+  animation:
+    landing-approach-title-relief 1400ms var(--landing-approach-ease) 260ms both;
 }
 
 .landing-statement h2 {
@@ -627,9 +695,87 @@ body:has(.landing-page) {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .landing-approach::before,
+  .landing-approach::after,
+  .landing-approach .landing-statement,
+  .landing-approach .landing-statement h2 {
+    animation: none;
+  }
+
   .landing-principleButton::after,
   .landing-principlePanel {
     transition: none;
+  }
+}
+
+@keyframes landing-approach-rescue-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-18%) scale(0.985);
+  }
+
+  34% {
+    opacity: 0.58;
+  }
+
+  72% {
+    opacity: 0.22;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(10%) scale(1.01);
+  }
+}
+
+@keyframes landing-approach-signal-line {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scaleX(0);
+  }
+
+  42% {
+    opacity: 0.44;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scaleX(1);
+  }
+}
+
+@keyframes landing-approach-statement-arrival {
+  0% {
+    filter: blur(4px);
+    opacity: 0;
+    transform: scale(0.972);
+  }
+
+  62% {
+    filter: blur(0.5px);
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  100% {
+    filter: none;
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes landing-approach-title-relief {
+  0%,
+  38% {
+    text-shadow: 0 0 0 rgba(49, 95, 85, 0);
+  }
+
+  62% {
+    text-shadow: 0 0 24px rgba(49, 95, 85, 0.13);
+  }
+
+  100% {
+    text-shadow: 0 0 0 rgba(49, 95, 85, 0);
   }
 }
 
