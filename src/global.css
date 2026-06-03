@@ -3093,11 +3093,30 @@
     --accent: var(--blog-accent);
     --border: var(--blog-rule);
     min-height: 100vh;
-    padding: 48px 20px 72px;
+    padding: clamp(1.25rem, 3vw, 2.5rem) clamp(1.25rem, 4vw, 4rem) 72px;
     background: var(--blog-bg);
     color: var(--blog-ink);
     color-scheme: light;
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .blog-siteHeader {
+    margin-bottom: clamp(3.5rem, 10vh, 6rem);
+    view-transition-name: blog-shell;
+    contain: layout paint;
+  }
+
+  .blog-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(1rem, 2.8vw, 2.4rem);
+    width: 100%;
+    color: var(--blog-muted);
+    font-size: clamp(0.78rem, 1.5vw, 0.95rem);
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    text-transform: uppercase;
   }
 
   .blog-header,
@@ -3111,8 +3130,6 @@
     display: grid;
     gap: 12px;
     margin-bottom: 34px;
-    view-transition-name: blog-shell;
-    contain: layout paint;
   }
 
   .blog-header h1,
@@ -3135,23 +3152,31 @@
   .blog-homeLink,
   .blog-backLink {
     width: fit-content;
-    color: var(--blog-accent);
-    font-family: var(--terminal-font, "Fira Code", monospace);
-    font-size: 13px;
+    color: inherit;
+    font: inherit;
     text-decoration: none;
   }
 
   .blog-homeLink:hover,
   .blog-backLink:hover,
-  .blog-listItem a:hover {
+  .blog-listItem a:hover,
+  .blog-inlineLink:hover {
+    color: var(--blog-ink);
     text-decoration: underline;
   }
 
   .blog-homeLink:focus-visible,
   .blog-backLink:focus-visible,
-  .blog-listItem a:focus-visible {
+  .blog-listItem a:focus-visible,
+  .blog-inlineLink:focus-visible {
     outline: 1px solid var(--blog-accent);
     outline-offset: 5px;
+  }
+
+  .blog-inlineLink {
+    color: var(--blog-accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
   }
 
   .blog-list {
@@ -3257,9 +3282,23 @@
     box-shadow: none;
   }
 
+  @media (max-width: 460px) {
+    .blog-page {
+      padding: 1rem 1rem 56px;
+    }
+
+    .blog-siteHeader {
+      margin-bottom: 4rem;
+    }
+
+    .blog-nav {
+      gap: 0.85rem;
+    }
+  }
+
   @media (prefers-reduced-motion: no-preference) {
+    html.js .blog-page.is-entering .blog-siteHeader,
     html.js .blog-page.is-entering .blog-header,
-    html.js .blog-page.is-entering .blog-backLink,
     html.js .blog-page.is-entering .blog-listItem,
     html.js .blog-page.is-entering .blog-articleHeader,
     html.js .blog-page.is-entering .blog-article .t-markdown {
@@ -3268,8 +3307,8 @@
       will-change: opacity, transform;
     }
 
+    html.js .blog-page.is-ready .blog-siteHeader,
     html.js .blog-page.is-ready .blog-header,
-    html.js .blog-page.is-ready .blog-backLink,
     html.js .blog-page.is-ready .blog-listItem,
     html.js .blog-page.is-ready .blog-articleHeader,
     html.js .blog-page.is-ready .blog-article .t-markdown {
@@ -3282,13 +3321,13 @@
       will-change: opacity, transform;
     }
 
-    .blog-page.is-entering .blog-header,
-    .blog-page.is-ready .blog-header {
+    .blog-page.is-entering .blog-siteHeader,
+    .blog-page.is-ready .blog-siteHeader {
       --blog-enter-delay: 80ms;
     }
 
-    .blog-page.is-entering .blog-backLink,
-    .blog-page.is-ready .blog-backLink,
+    .blog-page.is-entering .blog-header,
+    .blog-page.is-ready .blog-header,
     .blog-page.is-entering .blog-articleHeader,
     .blog-page.is-ready .blog-articleHeader,
     .blog-page.is-entering .blog-listItem:nth-child(1),
@@ -3343,13 +3382,13 @@
       --blog-enter-delay: 800ms;
     }
 
+    html[data-blog-transition] .blog-page.is-entering .blog-siteHeader,
     html[data-blog-transition] .blog-page.is-entering .blog-header,
-    html[data-blog-transition] .blog-page.is-entering .blog-backLink,
     html[data-blog-transition] .blog-page.is-entering .blog-listItem,
     html[data-blog-transition] .blog-page.is-entering .blog-articleHeader,
     html[data-blog-transition] .blog-page.is-entering .blog-article .t-markdown,
+    html[data-blog-transition] .blog-page.is-ready .blog-siteHeader,
     html[data-blog-transition] .blog-page.is-ready .blog-header,
-    html[data-blog-transition] .blog-page.is-ready .blog-backLink,
     html[data-blog-transition] .blog-page.is-ready .blog-listItem,
     html[data-blog-transition] .blog-page.is-ready .blog-articleHeader,
     html[data-blog-transition] .blog-page.is-ready .blog-article .t-markdown {
@@ -3360,13 +3399,13 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .blog-page.is-entering .blog-siteHeader,
     .blog-page.is-entering .blog-header,
-    .blog-page.is-entering .blog-backLink,
     .blog-page.is-entering .blog-listItem,
     .blog-page.is-entering .blog-articleHeader,
     .blog-page.is-entering .blog-article .t-markdown,
+    .blog-page.is-ready .blog-siteHeader,
     .blog-page.is-ready .blog-header,
-    .blog-page.is-ready .blog-backLink,
     .blog-page.is-ready .blog-listItem,
     .blog-page.is-ready .blog-articleHeader,
     .blog-page.is-ready .blog-article .t-markdown {

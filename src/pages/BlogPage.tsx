@@ -38,6 +38,27 @@ function postHref(post: BlogPost) {
   return withBasePath(`/blog/${encodeURIComponent(post.slug)}/`);
 }
 
+type BlogNavigationProps = {
+  showBlogLink?: boolean;
+};
+
+function BlogNavigation({ showBlogLink = false }: BlogNavigationProps) {
+  return (
+    <header className="blog-siteHeader" aria-label="Primary">
+      <nav className="blog-nav" aria-label="Blog navigation">
+        <a className="blog-homeLink" href={withBasePath("/")}>
+          fs.dev
+        </a>
+        {showBlogLink ? (
+          <a className="blog-backLink" href={withBasePath("/blog/")}>
+            Blog
+          </a>
+        ) : null}
+      </nav>
+    </header>
+  );
+}
+
 type BlogEntranceState = "entering" | "ready" | "idle";
 
 function useBlogEntranceClass(slug?: string) {
@@ -100,16 +121,17 @@ export default function BlogPage({ slug }: BlogPageProps) {
   if (slug && !post) {
     return (
       <main className={pageClassName}>
+        <BlogNavigation showBlogLink />
         <header className="blog-header">
-          <a className="blog-homeLink" href={withBasePath("/")}>
-            FS.dev
-          </a>
           <h1>Post not found</h1>
-          <p>The requested note is not available.</p>
+          <p>
+            The requested note is not available.{" "}
+            <a className="blog-inlineLink" href={withBasePath("/blog/")}>
+              Back to blog
+            </a>
+            .
+          </p>
         </header>
-        <a className="blog-backLink" href={withBasePath("/blog/")}>
-          Back to blog
-        </a>
       </main>
     );
   }
@@ -119,14 +141,7 @@ export default function BlogPage({ slug }: BlogPageProps) {
 
     return (
       <main className={pageClassName}>
-        <header className="blog-header">
-          <a className="blog-homeLink" href={withBasePath("/")}>
-            FS.dev
-          </a>
-          <a className="blog-backLink" href={withBasePath("/blog/")}>
-            Blog
-          </a>
-        </header>
+        <BlogNavigation showBlogLink />
         <article className="blog-article">
           <header className="blog-articleHeader">
             <h1>{post.title}</h1>
@@ -150,10 +165,8 @@ export default function BlogPage({ slug }: BlogPageProps) {
 
   return (
     <main className={pageClassName}>
+      <BlogNavigation />
       <header className="blog-header">
-        <a className="blog-homeLink" href={withBasePath("/")}>
-          Home
-        </a>
         <h1>Blog</h1>
         <p>{BLOG_DESCRIPTION}</p>
       </header>

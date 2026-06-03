@@ -151,6 +151,19 @@ async function writeHtml(routePath, template, seo, content) {
   await fs.writeFile(path.join(outputDir, "index.html"), html);
 }
 
+function renderBlogNavigation({ showBlogLink = false } = {}) {
+  const blogLink = showBlogLink
+    ? `<a class="blog-backLink" href="${escapeHtml(withBase("/blog/"))}">Blog</a>`
+    : "";
+  return `
+    <header class="blog-siteHeader" aria-label="Primary">
+      <nav class="blog-nav" aria-label="Blog navigation">
+        <a class="blog-homeLink" href="${escapeHtml(withBase("/"))}">fs.dev</a>
+        ${blogLink}
+      </nav>
+    </header>`.trim();
+}
+
 function renderBlogIndex(posts) {
   const items = posts
     .map((post) => {
@@ -175,8 +188,8 @@ function renderBlogIndex(posts) {
 
   return `
     <main class="blog-page is-entering">
+      ${renderBlogNavigation()}
       <header class="blog-header">
-        <a class="blog-homeLink" href="${escapeHtml(withBase("/"))}">FS.dev</a>
         <h1>Blog</h1>
         <p>FailureSmith notes on reliability, automation risk, execution ownership, and production systems.</p>
       </header>
@@ -195,10 +208,7 @@ async function renderPost(post) {
 
   return `
     <main class="blog-page is-entering">
-      <header class="blog-header">
-        <a class="blog-homeLink" href="${escapeHtml(withBase("/"))}">FS.dev</a>
-        <a class="blog-backLink" href="${escapeHtml(withBase("/blog/"))}">Blog</a>
-      </header>
+      ${renderBlogNavigation({ showBlogLink: true })}
       <article class="blog-article">
         <header class="blog-articleHeader">
           <h1>${escapeHtml(post.title)}</h1>
