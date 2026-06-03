@@ -174,7 +174,7 @@ function renderBlogIndex(posts) {
     .join("\n");
 
   return `
-    <main class="blog-page">
+    <main class="blog-page is-entering">
       <header class="blog-header">
         <a class="blog-homeLink" href="${escapeHtml(withBase("/"))}">FS.dev</a>
         <h1>Blog</h1>
@@ -194,7 +194,7 @@ async function renderPost(post) {
   const body = await marked.parse(post.body);
 
   return `
-    <main class="blog-page">
+    <main class="blog-page is-entering">
       <header class="blog-header">
         <a class="blog-homeLink" href="${escapeHtml(withBase("/"))}">FS.dev</a>
         <a class="blog-backLink" href="${escapeHtml(withBase("/blog/"))}">Blog</a>

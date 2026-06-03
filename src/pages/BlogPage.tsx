@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MarkdownBlock } from "@components/MarkdownBlock";
 import { blogIndex, BlogPost } from "@data/blogIndex";
+import { withBasePath } from "@utils/appRouting";
 
 type BlogPageProps = {
   slug?: string;
@@ -8,12 +9,7 @@ type BlogPageProps = {
 
 const BLOG_DESCRIPTION =
   "FailureSmith notes on reliability, automation risk, execution ownership, and production systems.";
-
-function withBase(path: string) {
-  const base = import.meta.env.BASE_URL || "/";
-  const cleanBase = base === "/" ? "" : base.replace(/\/$/, "");
-  return `${cleanBase}${path}`;
-}
+const BLOG_ENTRANCE_MS = 1500;
 
 function formatDate(date?: string) {
   if (!date) return null;
@@ -39,7 +35,51 @@ function setMeta(name: string, content: string) {
 }
 
 function postHref(post: BlogPost) {
-  return withBase(`/blog/${encodeURIComponent(post.slug)}/`);
+  return withBasePath(`/blog/${encodeURIComponent(post.slug)}/`);
+}
+
+type BlogEntranceState = "entering" | "ready" | "idle";
+
+function useBlogEntranceClass(slug?: string) {
+  const [entranceState, setEntranceState] =
+    useState<BlogEntranceState>("entering");
+  const previousSlug = useRef(slug);
+
+  useEffect(() => {
+    if (previousSlug.current !== slug) {
+      previousSlug.current = slug;
+      setEntranceState("idle");
+    }
+  }, [slug]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setEntranceState("idle");
+      return;
+    }
+
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        setEntranceState("ready");
+      });
+    });
+    const idleTimer = window.setTimeout(() => {
+      setEntranceState("idle");
+    }, BLOG_ENTRANCE_MS);
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+      window.clearTimeout(idleTimer);
+    };
+  }, []);
+
+  return entranceState === "idle"
+    ? "blog-page"
+    : `blog-page is-${entranceState}`;
 }
 
 export default function BlogPage({ slug }: BlogPageProps) {
@@ -48,6 +88,7 @@ export default function BlogPage({ slug }: BlogPageProps) {
     () => (slug ? blogIndex.findBySlugOrTitle(slug) : undefined),
     [slug],
   );
+  const pageClassName = useBlogEntranceClass(slug);
   const title = post ? `${post.title} | FS.dev` : "Blog | FS.dev";
   const description = post?.summary || BLOG_DESCRIPTION;
 
@@ -58,15 +99,15 @@ export default function BlogPage({ slug }: BlogPageProps) {
 
   if (slug && !post) {
     return (
-      <main className="blog-page">
+      <main className={pageClassName}>
         <header className="blog-header">
-          <a className="blog-homeLink" href={withBase("/")}>
+          <a className="blog-homeLink" href={withBasePath("/")}>
             FS.dev
           </a>
           <h1>Post not found</h1>
           <p>The requested note is not available.</p>
         </header>
-        <a className="blog-backLink" href={withBase("/blog/")}>
+        <a className="blog-backLink" href={withBasePath("/blog/")}>
           Back to blog
         </a>
       </main>
@@ -77,12 +118,12 @@ export default function BlogPage({ slug }: BlogPageProps) {
     const writtenAt = formatDate(post.date);
 
     return (
-      <main className="blog-page">
+      <main className={pageClassName}>
         <header className="blog-header">
-          <a className="blog-homeLink" href={withBase("/")}>
+          <a className="blog-homeLink" href={withBasePath("/")}>
             FS.dev
           </a>
-          <a className="blog-backLink" href={withBase("/blog/")}>
+          <a className="blog-backLink" href={withBasePath("/blog/")}>
             Blog
           </a>
         </header>
@@ -108,9 +149,9 @@ export default function BlogPage({ slug }: BlogPageProps) {
   }
 
   return (
-    <main className="blog-page">
+    <main className={pageClassName}>
       <header className="blog-header">
-        <a className="blog-homeLink" href={withBase("/")}>
+        <a className="blog-homeLink" href={withBasePath("/")}>
           Home
         </a>
         <h1>Blog</h1>
