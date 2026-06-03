@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/prerender-blog.js && node scripts/version-service-worker.js",
+    "build": "vite build && node scripts/prerender-blog.js && node scripts/generate-seo-assets.js && node scripts/version-service-worker.js",
     "preview": "vite preview",
     "test": "vitest run",
     "hash-files": "node scripts/generate-file-hashes.js"

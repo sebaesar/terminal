@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect } from "react";
 import { useReducedMotion } from "motion/react";
 import type { LandingSectionProps } from "./types";
 
 type HeroSectionProps = LandingSectionProps & {
+  animateTitle: boolean;
   trustlineState: HeroTrustlineState;
   onTrustlineComplete: () => void;
 };
@@ -11,47 +12,47 @@ export type HeroTrustlineState = "idle" | "typing" | "complete";
 
 const trustline =
   "Products stall when nobody owns technical decisions, delivery, and long-term reliability.";
-const trustlineTypingMs = 32;
+const trustlineWords = trustline.split(" ");
+const trustlineWordEntranceMs = 760;
+const trustlineCompletionBufferMs = 140;
+
+function getTrustlineWordDelayMs(index: number) {
+  const phrasePauseMs = Math.floor(index / 5) * 130;
+  const waveOffsetMs = Math.sin(index * 1.18) * 38;
+
+  return Math.max(
+    0,
+    Math.round(80 + index * 118 + phrasePauseMs + waveOffsetMs),
+  );
+}
+
+const trustlineAnimationTotalMs =
+  getTrustlineWordDelayMs(trustlineWords.length - 1) +
+  trustlineWordEntranceMs +
+  trustlineCompletionBufferMs;
 
 export function HeroSection({
+  animateTitle,
   hidden,
   trustlineState,
   onTrustlineComplete,
 }: HeroSectionProps) {
   const shouldReduceMotion = useReducedMotion();
-  const [visibleTrustline, setVisibleTrustline] = useState("");
 
   useEffect(() => {
-    if (trustlineState === "idle") {
-      setVisibleTrustline("");
-      return;
-    }
-
-    if (trustlineState === "complete") {
-      setVisibleTrustline(trustline);
-      return;
-    }
+    if (trustlineState !== "typing") return;
 
     if (shouldReduceMotion) {
-      setVisibleTrustline(trustline);
       onTrustlineComplete();
       return;
     }
 
-    let nextLength = 1;
-    setVisibleTrustline(trustline.slice(0, nextLength));
+    const completionTimerId = window.setTimeout(
+      onTrustlineComplete,
+      trustlineAnimationTotalMs,
+    );
 
-    const intervalId = window.setInterval(() => {
-      nextLength += 1;
-      setVisibleTrustline(trustline.slice(0, nextLength));
-
-      if (nextLength >= trustline.length) {
-        window.clearInterval(intervalId);
-        onTrustlineComplete();
-      }
-    }, trustlineTypingMs);
-
-    return () => window.clearInterval(intervalId);
+    return () => window.clearTimeout(completionTimerId);
   }, [onTrustlineComplete, shouldReduceMotion, trustlineState]);
 
   return (
@@ -63,12 +64,37 @@ export function HeroSection({
     >
       <div className="landing-heroCenter">
         <div className="landing-heroCopy">
-          <h1 id="landing-title" className="landing-title">
+          <h1
+            id="landing-title"
+            className={
+              animateTitle
+                ? "landing-title landing-title--intro"
+                : "landing-title"
+            }
+          >
             <span>You don&apos;t need another developer.</span>
             <span>You need someone who owns execution.</span>
           </h1>
-          <p className="landing-heroTrustline">
-            <span aria-hidden="true">{visibleTrustline}</span>
+          <p className="landing-heroTrustline" data-state={trustlineState}>
+            {trustlineState !== "idle" ? (
+              <span className="landing-trustlineVisual" aria-hidden="true">
+                {trustlineWords.map((word, index) => (
+                  <span
+                    className="landing-trustlineWord"
+                    key={`${word}-${index}`}
+                    style={
+                      {
+                        "--landing-trustline-word-delay": `${getTrustlineWordDelayMs(
+                          index,
+                        )}ms`,
+                      } as CSSProperties
+                    }
+                  >
+                    {word}
+                  </span>
+                ))}
+              </span>
+            ) : null}
             {trustlineState !== "idle" ? (
               <span className="landing-srOnly">{trustline}</span>
             ) : null}

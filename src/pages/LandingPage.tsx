@@ -20,7 +20,11 @@ import {
   shouldIgnoreLandingKeyboardNavigation,
 } from "./landing/keyboardNavigation";
 import { LandingHeader } from "./landing/LandingHeader";
-import { RecognitionSection } from "./landing/RecognitionSection";
+import {
+  RecognitionSection,
+  type RecognitionEntranceMode,
+} from "./landing/RecognitionSection";
+import { shouldAdvanceRecognitionEntrance } from "./landing/recognitionEntranceNavigation";
 import { SectionProgress } from "./landing/SectionProgress";
 import { WorkSection } from "./landing/WorkSection";
 import { caseStudies } from "./landing/content";
@@ -41,7 +45,8 @@ const contextMenuMargin = 8;
 const wheelThreshold = 60;
 const wheelLockMs = 560;
 const clickSuppressionMs = 350;
-const heroTrustlineDelayMs = 5000;
+const heroTrustlineDelayMs = 3000;
+const heroTitleIntroMs = 880;
 const calmEase = [0.22, 1, 0.36, 1] as const;
 
 const landingSectionOrder: LandingSectionId[] = [
@@ -102,8 +107,11 @@ function replaceHash(sectionId: LandingSectionId) {
 
 function renderLandingSection(
   sectionId: LandingSectionId,
+  shouldAnimateHeroTitle: boolean,
   heroTrustlineState: HeroTrustlineState,
   onHeroTrustlineComplete: () => void,
+  recognitionEntranceMode: RecognitionEntranceMode,
+  onRecognitionEntranceComplete: () => void,
   activeCaseStudyIndex: number,
   caseTransitionDirection: WorkNavigationDirection,
 ) {
@@ -111,13 +119,20 @@ function renderLandingSection(
     case "hero":
       return (
         <HeroSection
+          animateTitle={shouldAnimateHeroTitle}
           hidden={false}
           trustlineState={heroTrustlineState}
           onTrustlineComplete={onHeroTrustlineComplete}
         />
       );
     case "recognition":
-      return <RecognitionSection hidden={false} />;
+      return (
+        <RecognitionSection
+          entranceMode={recognitionEntranceMode}
+          hidden={false}
+          onEntranceComplete={onRecognitionEntranceComplete}
+        />
+      );
     case "approach":
       return <ApproachSection hidden={false} />;
     case "work":
@@ -138,6 +153,9 @@ export default function LandingPage({
   onOpenTerminal,
 }: LandingPageProps) {
   const [activeIndex, setActiveIndex] = useState(getInitialSectionIndex);
+  const [shouldAnimateHeroTitle, setShouldAnimateHeroTitle] = useState(
+    () => getInitialSectionIndex() === 0,
+  );
   const [navigationDirection, setNavigationDirection] = useState<1 | -1>(1);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -155,6 +173,10 @@ export default function LandingPage({
     useState<WorkNavigationDirection>(1);
   const [heroTrustlineState, setHeroTrustlineState] =
     useState<HeroTrustlineState>("idle");
+  const [recognitionEntranceMode, setRecognitionEntranceMode] =
+    useState<RecognitionEntranceMode>("default");
+  const [isRecognitionEntranceComplete, setIsRecognitionEntranceComplete] =
+    useState(false);
   const activeSection = landingSectionOrder[activeIndex];
   const shouldReduceMotion = useReducedMotion();
 
@@ -164,19 +186,26 @@ export default function LandingPage({
         Math.max(nextIndex, 0),
         landingSectionOrder.length - 1,
       );
+      const nextSection = landingSectionOrder[clampedIndex];
+
       if (clampedIndex !== activeIndex) {
         setNavigationDirection(clampedIndex > activeIndex ? 1 : -1);
+        setShouldAnimateHeroTitle(false);
       }
-      if (landingSectionOrder[clampedIndex] === "work") {
+      if (nextSection === "recognition" && clampedIndex !== activeIndex) {
+        setRecognitionEntranceMode("default");
+        setIsRecognitionEntranceComplete(Boolean(shouldReduceMotion));
+      }
+      if (nextSection === "work") {
         setCaseTransitionDirection(workEntryDirection);
         setActiveCaseStudyIndex(
           getWorkEntryIndex(workEntryDirection, caseStudies.length),
         );
       }
       setActiveIndex(clampedIndex);
-      replaceHash(landingSectionOrder[clampedIndex]);
+      replaceHash(nextSection);
     },
-    [activeIndex],
+    [activeIndex, shouldReduceMotion],
   );
 
   const navigateToSection = useCallback(
@@ -232,6 +261,10 @@ export default function LandingPage({
     setHeroTrustlineState("complete");
   }, []);
 
+  const completeRecognitionEntrance = useCallback(() => {
+    setIsRecognitionEntranceComplete(true);
+  }, []);
+
   const advanceHeroTrustlineOnNavigationIntent = useCallback(() => {
     if (activeSection !== "hero") return false;
 
@@ -253,9 +286,35 @@ export default function LandingPage({
     startHeroTrustlineTyping,
   ]);
 
+  const advanceRecognitionEntranceOnNavigationIntent = useCallback(
+    (direction: WorkNavigationDirection) => {
+      if (
+        !shouldAdvanceRecognitionEntrance({
+          activeSection,
+          direction,
+          isEntranceComplete: isRecognitionEntranceComplete,
+          shouldReduceMotion: Boolean(shouldReduceMotion),
+        })
+      ) {
+        return false;
+      }
+
+      setRecognitionEntranceMode("accelerated");
+      return true;
+    },
+    [activeSection, isRecognitionEntranceComplete, shouldReduceMotion],
+  );
+
   useEffect(() => {
     replaceHash(activeSection);
   }, [activeSection]);
+
+  useEffect(() => {
+    if (activeSection !== "recognition") return;
+
+    setRecognitionEntranceMode("default");
+    setIsRecognitionEntranceComplete(Boolean(shouldReduceMotion));
+  }, [activeSection, shouldReduceMotion]);
 
   useEffect(() => {
     if (heroTrustlineState !== "idle") return;
@@ -267,6 +326,22 @@ export default function LandingPage({
 
     return () => window.clearTimeout(timerId);
   }, [heroTrustlineState, startHeroTrustlineTyping]);
+
+  useEffect(() => {
+    if (!shouldAnimateHeroTitle) return;
+
+    if (shouldReduceMotion) {
+      setShouldAnimateHeroTitle(false);
+      return;
+    }
+
+    const timerId = window.setTimeout(
+      () => setShouldAnimateHeroTitle(false),
+      heroTitleIntroMs,
+    );
+
+    return () => window.clearTimeout(timerId);
+  }, [shouldAnimateHeroTitle, shouldReduceMotion]);
 
   useEffect(() => {
     return () => {
@@ -310,6 +385,9 @@ export default function LandingPage({
       setContextMenu(null);
 
       if (advanceHeroTrustlineOnNavigationIntent()) return;
+      if (advanceRecognitionEntranceOnNavigationIntent(direction)) {
+        return;
+      }
 
       navigateWithinActiveSurface(direction);
     };
@@ -317,7 +395,11 @@ export default function LandingPage({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [advanceHeroTrustlineOnNavigationIntent, navigateWithinActiveSurface]);
+  }, [
+    advanceHeroTrustlineOnNavigationIntent,
+    advanceRecognitionEntranceOnNavigationIntent,
+    navigateWithinActiveSurface,
+  ]);
 
   const openContextMenu = (event: MouseEvent<HTMLElement>) => {
     event.preventDefault();
@@ -344,12 +426,27 @@ export default function LandingPage({
     if (wheelLockedRef.current) return;
 
     if (advanceHeroTrustlineOnNavigationIntent()) return;
+    if (
+      event.deltaY > 0 &&
+      advanceRecognitionEntranceOnNavigationIntent(1)
+    ) {
+      wheelDeltaRef.current = 0;
+      lockWheelNavigation();
+      return;
+    }
 
     wheelDeltaRef.current += event.deltaY;
     if (Math.abs(wheelDeltaRef.current) < wheelThreshold) return;
 
-    navigateWithinActiveSurface(wheelDeltaRef.current > 0 ? 1 : -1);
+    const direction = wheelDeltaRef.current > 0 ? 1 : -1;
     wheelDeltaRef.current = 0;
+
+    if (advanceRecognitionEntranceOnNavigationIntent(direction)) {
+      lockWheelNavigation();
+      return;
+    }
+
+    navigateWithinActiveSurface(direction);
     lockWheelNavigation();
   };
 
@@ -400,6 +497,7 @@ export default function LandingPage({
 
     setContextMenu(null);
     if (advanceHeroTrustlineOnNavigationIntent()) return;
+    if (advanceRecognitionEntranceOnNavigationIntent(direction)) return;
 
     navigateWithinActiveSurface(direction);
   };
@@ -460,8 +558,11 @@ export default function LandingPage({
           >
             {renderLandingSection(
               activeSection,
+              shouldAnimateHeroTitle,
               heroTrustlineState,
               completeHeroTrustline,
+              recognitionEntranceMode,
+              completeRecognitionEntrance,
               activeCaseStudyIndex,
               caseTransitionDirection,
             )}

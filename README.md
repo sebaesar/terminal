@@ -24,6 +24,8 @@ A single-page, terminal-style personal site built with React + Vite. Fork it, dr
 
 Current workflow at `.github/workflows/deploy-pages.yml` automatically deploys to github pages, you just need to enable it if it's not:
 1. In GitHub: Settings → Pages → Source = “GitHub Actions”. Pages will publish to `https://<username>.github.io/terminal/`.
+2. `pnpm run build` writes `robots.txt` and `sitemap.xml` into `dist/`. Set a repository variable named `SITE_URL` when using a custom domain or non-default Pages URL so sitemap URLs are canonical.
+3. For a project Pages URL under `/terminal/`, submit `https://<username>.github.io/terminal/sitemap.xml` directly in Search Console. Host-root robots discovery requires control of `https://<username>.github.io/robots.txt`.
 
 ## Useful scripts
 
