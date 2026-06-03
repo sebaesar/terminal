@@ -228,6 +228,112 @@ body:has(.landing-page) {
   opacity: 1;
 }
 
+.landing-askAiPromptSlot {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: clamp(1.25rem, 4vh, 2.5rem);
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+.landing-askAiPrompt {
+  --landing-askai-bg: rgba(255, 255, 255, 0.78);
+  --landing-askai-border: rgba(18, 20, 18, 0.14);
+  --landing-askai-color: #121412;
+  --landing-askai-shadow:
+    0 0 1px rgba(18, 20, 18, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  --landing-askai-hover-bg: rgba(255, 255, 255, 0.9);
+  --landing-askai-hover-border: rgba(49, 95, 85, 0.32);
+  --landing-askai-hover-shadow:
+    inset 0 1px 3px rgba(18, 20, 18, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+  --landing-askai-active-bg: rgba(255, 255, 255, 0.72);
+  --landing-askai-active-border: rgba(49, 95, 85, 0.36);
+  --landing-askai-active-shadow:
+    inset 0 3px 8px rgba(18, 20, 18, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: clamp(260px, 50vw, 460px);
+  max-width: min(100%, 460px);
+  padding: 12px 18px;
+  border: 1px solid var(--landing-askai-border);
+  border-radius: 999px;
+  background: var(--landing-askai-bg);
+  color: var(--landing-askai-color);
+  box-shadow: var(--landing-askai-shadow);
+  cursor: pointer;
+  overflow: hidden;
+  pointer-events: auto;
+  backdrop-filter: blur(4px) saturate(120%);
+  -webkit-backdrop-filter: blur(4px) saturate(120%);
+  transition:
+    transform 240ms ease,
+    width 260ms ease,
+    box-shadow 220ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    filter 220ms ease;
+}
+
+.landing-askAiPrompt:hover,
+.landing-askAiPrompt:focus-visible {
+  border-color: var(--landing-askai-hover-border);
+  background: var(--landing-askai-hover-bg);
+  color: var(--landing-askai-color);
+  box-shadow: var(--landing-askai-hover-shadow);
+  filter: brightness(1.03);
+  outline: none;
+  transform: translateY(1.2px) scale(0.995);
+}
+
+.landing-askAiPrompt:active {
+  border-color: var(--landing-askai-active-border);
+  background: var(--landing-askai-active-bg);
+  box-shadow: var(--landing-askai-active-shadow);
+  filter: brightness(0.98);
+  transform: translateY(3px) scale(0.99);
+}
+
+.landing-askAiPrompt:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--landing-accent) 64%, rgba(255, 255, 255, 0.4));
+  outline-offset: 4px;
+}
+
+.landing-askAiPromptLabel {
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+  text-shadow: 0 4px 14px rgba(18, 20, 18, 0.24);
+  text-transform: uppercase;
+}
+
+.landing-askAiSparkles {
+  position: absolute;
+  inset: -10% 0;
+  z-index: 0;
+  opacity: 0.9;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.landing-askAiSparklesCanvas {
+  width: 100%;
+  height: 120%;
+}
+
 .landing-sectionProgress::before {
   content: "";
   position: absolute;
@@ -679,6 +785,10 @@ body:has(.landing-page) {
     gap: 1.105rem;
   }
 
+  .landing-askAiPromptSlot {
+    bottom: 1rem;
+  }
+
   .landing-sectionProgressDot {
     width: 1.1625rem;
     height: 1.1625rem;
@@ -750,7 +860,8 @@ body:has(.landing-page) {
   }
 
   .landing-principleButton::after,
-  .landing-principlePanel {
+  .landing-principlePanel,
+  .landing-askAiPrompt {
     transition: none;
   }
 }

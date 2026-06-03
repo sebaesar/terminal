@@ -1,7 +1,9 @@
 import {
+  Suspense,
   type MouseEvent,
   type PointerEvent,
   type WheelEvent,
+  lazy,
   useCallback,
   useEffect,
   useRef,
@@ -47,7 +49,14 @@ const wheelLockMs = 560;
 const clickSuppressionMs = 350;
 const heroTrustlineDelayMs = 3000;
 const heroTitleIntroMs = 880;
+const askAiPromptDelayMs = 5000;
+const askAiPromptSparkleColor = "#121412";
 const calmEase = [0.22, 1, 0.36, 1] as const;
+
+const SparklesCore = lazy(async () => {
+  const module = await import("@components/ui/sparkles");
+  return { default: module.SparklesCore };
+});
 
 const landingSectionOrder: LandingSectionId[] = [
   "hero",
@@ -177,6 +186,7 @@ export default function LandingPage({
     useState<RecognitionEntranceMode>("default");
   const [isRecognitionEntranceComplete, setIsRecognitionEntranceComplete] =
     useState(false);
+  const [isAskAiPromptVisible, setIsAskAiPromptVisible] = useState(false);
   const activeSection = landingSectionOrder[activeIndex];
   const shouldReduceMotion = useReducedMotion();
 
@@ -308,6 +318,15 @@ export default function LandingPage({
   useEffect(() => {
     replaceHash(activeSection);
   }, [activeSection]);
+
+  useEffect(() => {
+    const timerId = window.setTimeout(
+      () => setIsAskAiPromptVisible(true),
+      askAiPromptDelayMs,
+    );
+
+    return () => window.clearTimeout(timerId);
+  }, []);
 
   useEffect(() => {
     if (activeSection !== "recognition") return;
@@ -528,6 +547,43 @@ export default function LandingPage({
         onNavigate={navigateToSection}
         sections={landingSectionOrder}
       />
+
+      {isAskAiPromptVisible ? (
+        <motion.div
+          className="landing-askAiPromptSlot"
+          initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{
+            duration: shouldReduceMotion ? 0.01 : 0.42,
+            ease: shouldReduceMotion ? "linear" : calmEase,
+          }}
+        >
+          <button
+            type="button"
+            className="landing-askAiPrompt"
+            aria-label="Ask AI about fit"
+            title="Ask AI about fit"
+            onClick={onAskAi}
+          >
+            <span className="landing-askAiSparkles" aria-hidden="true">
+              <Suspense fallback={null}>
+                <SparklesCore
+                  background="transparent"
+                  className="landing-askAiSparklesCanvas"
+                  minSize={0.4}
+                  maxSize={1.4}
+                  particleColor={askAiPromptSparkleColor}
+                  particleDensity={120}
+                  speed={0.5}
+                />
+              </Suspense>
+            </span>
+            <span className="landing-askAiPromptLabel">
+              Ask AI about fit
+            </span>
+          </button>
+        </motion.div>
+      ) : null}
 
       <div
         className="landing-stage"
