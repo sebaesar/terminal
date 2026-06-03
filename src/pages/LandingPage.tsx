@@ -2,7 +2,6 @@ import {
   Suspense,
   type MouseEvent,
   type PointerEvent,
-  type WheelEvent,
   lazy,
   useCallback,
   useEffect,
@@ -31,6 +30,10 @@ import { SectionProgress } from "./landing/SectionProgress";
 import { WorkSection } from "./landing/WorkSection";
 import { caseStudies } from "./landing/content";
 import type { LandingSectionId } from "./landing/types";
+import {
+  getWheelNavigationIntent,
+  isVerticalWheelNavigation,
+} from "./landing/wheelNavigation";
 import {
   getWorkEntryIndex,
   getWorkNavigationTarget,
@@ -170,6 +173,7 @@ export default function LandingPage({
     x: number;
     y: number;
   } | null>(null);
+  const landingRootRef = useRef<HTMLElement | null>(null);
   const firstMenuItemRef = useRef<HTMLButtonElement | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const suppressNextClickRef = useRef(false);
@@ -437,37 +441,64 @@ export default function LandingPage({
     suppressNextClickRef.current = false;
   };
 
-  const handleWheel = (event: WheelEvent<HTMLElement>) => {
-    event.preventDefault();
-    setContextMenu(null);
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      if (!isVerticalWheelNavigation(event.deltaX, event.deltaY)) return;
 
-    if (Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
-    if (wheelLockedRef.current) return;
+      if (event.cancelable) event.preventDefault();
+      setContextMenu(null);
 
-    if (advanceHeroTrustlineOnNavigationIntent()) return;
-    if (
-      event.deltaY > 0 &&
-      advanceRecognitionEntranceOnNavigationIntent(1)
-    ) {
-      wheelDeltaRef.current = 0;
+      if (wheelLockedRef.current) return;
+
+      if (advanceHeroTrustlineOnNavigationIntent()) {
+        wheelDeltaRef.current = 0;
+        return;
+      }
+      if (
+        event.deltaY > 0 &&
+        advanceRecognitionEntranceOnNavigationIntent(1)
+      ) {
+        wheelDeltaRef.current = 0;
+        lockWheelNavigation();
+        return;
+      }
+
+      const wheelIntent = getWheelNavigationIntent({
+        accumulatedDelta: wheelDeltaRef.current,
+        deltaX: event.deltaX,
+        deltaY: event.deltaY,
+        threshold: wheelThreshold,
+      });
+      wheelDeltaRef.current = wheelIntent.nextAccumulatedDelta;
+
+      if (!wheelIntent.direction) return;
+
+      const { direction } = wheelIntent;
+
+      if (advanceRecognitionEntranceOnNavigationIntent(direction)) {
+        lockWheelNavigation();
+        return;
+      }
+
+      navigateWithinActiveSurface(direction);
       lockWheelNavigation();
-      return;
-    }
+    },
+    [
+      advanceHeroTrustlineOnNavigationIntent,
+      advanceRecognitionEntranceOnNavigationIntent,
+      lockWheelNavigation,
+      navigateWithinActiveSurface,
+    ],
+  );
 
-    wheelDeltaRef.current += event.deltaY;
-    if (Math.abs(wheelDeltaRef.current) < wheelThreshold) return;
+  useEffect(() => {
+    const landingRoot = landingRootRef.current;
+    if (!landingRoot) return;
 
-    const direction = wheelDeltaRef.current > 0 ? 1 : -1;
-    wheelDeltaRef.current = 0;
+    landingRoot.addEventListener("wheel", handleWheel, { passive: false });
 
-    if (advanceRecognitionEntranceOnNavigationIntent(direction)) {
-      lockWheelNavigation();
-      return;
-    }
-
-    navigateWithinActiveSurface(direction);
-    lockWheelNavigation();
-  };
+    return () => landingRoot.removeEventListener("wheel", handleWheel);
+  }, [handleWheel]);
 
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
     if (event.pointerType === "mouse" || !event.isPrimary) return;
@@ -531,10 +562,10 @@ export default function LandingPage({
 
   return (
     <main
+      ref={landingRootRef}
       className="landing-page"
       onClickCapture={suppressClickAfterDrag}
       onContextMenu={openContextMenu}
-      onWheel={handleWheel}
     >
       <LandingHeader
         activeSection={activeSection}
