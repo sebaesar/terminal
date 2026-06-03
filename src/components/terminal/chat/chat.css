@@ -1,10 +1,43 @@
+:root {
+  --chat-bg: #f7f8f5;
+  --chat-surface: #ffffff;
+  --chat-text: #121412;
+  --chat-muted: #5f665f;
+  --chat-accent: #315f55;
+  --chat-border: #d7ddd4;
+  --chat-card: rgba(255, 255, 255, 0.92);
+  --chat-shadow: 0 22px 58px rgba(18, 20, 18, 0.16);
+  --chat-color-scheme: light;
+}
+
+:root[data-terminal-tone] {
+  --chat-bg: var(--bg, #f7f8f5);
+  --chat-surface: var(--surface, #ffffff);
+  --chat-text: var(--text, #121412);
+  --chat-muted: var(--muted, #5f665f);
+  --chat-accent: var(--accent, #315f55);
+  --chat-border: var(--border, #d7ddd4);
+  --chat-card: var(--card, rgba(255, 255, 255, 0.92));
+  --chat-shadow: var(--shadow, 0 22px 58px rgba(18, 20, 18, 0.16));
+  --chat-color-scheme: var(--terminal-color-scheme, light);
+}
+
 .chat-wrap {
+  --bg: var(--chat-bg);
+  --surface: var(--chat-surface);
+  --text: var(--chat-text);
+  --muted: var(--chat-muted);
+  --accent: var(--chat-accent);
+  --border: var(--chat-border);
+  --card: var(--chat-card);
+  --shadow: var(--chat-shadow);
   position: fixed;
   top: 86px;
   right: 18px;
   max-width: 500px;
   width: calc(100vw - 32px);
   z-index: var(--z-chat, 60);
+  color-scheme: var(--chat-color-scheme);
   transition: transform 150ms ease, opacity 150ms ease;
 }
 
