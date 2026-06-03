@@ -47,7 +47,7 @@ function BlogNavigation({ showBlogLink = false }: BlogNavigationProps) {
     <header className="blog-siteHeader" aria-label="Primary">
       <nav className="blog-nav" aria-label="Blog navigation">
         <a className="blog-homeLink" href={withBasePath("/")}>
-          fs.dev
+          Home
         </a>
         {showBlogLink ? (
           <a className="blog-backLink" href={withBasePath("/blog/")}>
@@ -110,7 +110,7 @@ export default function BlogPage({ slug }: BlogPageProps) {
     [slug],
   );
   const pageClassName = useBlogEntranceClass(slug);
-  const title = post ? `${post.title} | FS.dev` : "Blog | FS.dev";
+  const title = "Blog | FS.dev";
   const description = post?.summary || BLOG_DESCRIPTION;
 
   useEffect(() => {
