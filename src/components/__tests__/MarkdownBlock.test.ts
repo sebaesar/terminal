@@ -8,4 +8,11 @@ describe("renderMarkdown", () => {
     expect(html).not.toContain("<br");
     expect(html).toContain("First sentence.\nSecond sentence.");
   });
+
+  it("syntax-highlights fenced code blocks", async () => {
+    const html = await renderMarkdown("```solidity\nfunction flag() { return true; }\n```");
+
+    expect(html).toContain('class="hljs language-solidity"');
+    expect(html).toContain("hljs-keyword");
+  });
 });
