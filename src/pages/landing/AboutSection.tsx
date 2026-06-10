@@ -23,8 +23,10 @@ export function AboutSection({ hidden }: LandingSectionProps) {
     >
       <div className="landing-sectionInner landing-aboutGrid">
         <div>
-          <p className="landing-kicker">Quiet credibility</p>
-          <h2 id="about-title">I work where delivery risk is the problem.</h2>
+          <p className="landing-kicker">Working method</p>
+          <h2 id="about-title">
+            I work where delivery risk needs a clear method.
+          </h2>
         </div>
         <div
           className="landing-principles"

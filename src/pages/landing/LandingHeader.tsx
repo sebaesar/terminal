@@ -26,7 +26,9 @@ export function LandingHeader({
       <a href={homeHref} onClick={handleSectionClick("hero")}>
         <div>
           <p className="landing-brand">Milad</p>
-          <span className="landing-brandSubtitle">Founder&apos;s Engineer</span>
+          <span className="landing-brandSubtitle">
+            Methodical Founder&apos;s Engineer
+          </span>
         </div>
       </a>
       <nav className="landing-nav" aria-label="Main navigation">

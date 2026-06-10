@@ -11,7 +11,7 @@ type HeroSectionProps = LandingSectionProps & {
 export type HeroTrustlineState = "idle" | "typing" | "complete";
 
 const trustline =
-  "Products stall when nobody owns technical decisions, delivery, and long-term reliability.";
+  "Methodical execution turns vague product risk into named decisions, bounded work, and evidence you can inspect.";
 const trustlineWords = trustline.split(" ");
 const trustlineWordEntranceMs = 760;
 const trustlineCompletionBufferMs = 140;
@@ -73,7 +73,7 @@ export function HeroSection({
             }
           >
             <span>You don&apos;t need another developer.</span>
-            <span>You need someone who owns execution.</span>
+            <span>You need methodical ownership of execution.</span>
           </h1>
           <p className="landing-heroTrustline" data-state={trustlineState}>
             {trustlineState !== "idle" ? (

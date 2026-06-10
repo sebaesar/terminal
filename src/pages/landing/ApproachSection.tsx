@@ -9,9 +9,9 @@ export function ApproachSection({ hidden }: LandingSectionProps) {
       hidden={hidden}
     >
       <div className="landing-statement">
-        <p className="landing-kicker">Execution ownership</p>
+        <p className="landing-kicker">Methodical execution</p>
         <h2 id="approach-title">
-          I step in as the person responsible for execution.
+          I turn uncertainty into named constraints, small proofs, and owned release paths.
         </h2>
       </div>
     </section>

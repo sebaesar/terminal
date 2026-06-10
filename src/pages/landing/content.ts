@@ -3,7 +3,7 @@ export const recognitionItems = [
   "Rebuilding the same product twice",
   "Missing deadlines despite active development",
   "Feeling unable to evaluate technical decisions",
-  "Watching momentum disappear into execution",
+  "Watching momentum disappear without a clear method",
 ];
 
 export const caseStudies = [
@@ -13,7 +13,7 @@ export const caseStudies = [
     situation:
       "A founder needed a usable product path before committing months of spend.",
     outcome:
-      "The work narrowed to the smallest production-ready slice, with enough evidence to charge real users and continue from proof instead of opinion.",
+      "We named the constraint, cut scope to the smallest production-ready slice, and used real payment evidence before widening the product.",
   },
   {
     before: "Prototype",
@@ -29,21 +29,21 @@ export const caseStudies = [
     situation:
       "A live system had become hard to trust under load, change, and operational pressure.",
     outcome:
-      "Failure paths were bounded, recovery became inspectable, and reliability could be judged from evidence instead of reassurance.",
+      "Failure paths were named, recovery became inspectable, and reliability could be judged from evidence instead of reassurance.",
   },
 ];
 
 export const ownershipPrinciples = [
   {
-    title: "Decisions get named.",
-    body: "Tradeoffs, constraints, and risks are made explicit before they turn into hidden delays.",
+    title: "Constraints get named.",
+    body: "Tradeoffs, assumptions, and risks are made explicit before they turn into hidden delays.",
   },
   {
-    title: "Delivery stays owned.",
-    body: "Planning, implementation, release, and follow-through are treated as one responsibility.",
+    title: "Work moves in small proofs.",
+    body: "Scope narrows to the smallest reversible step, then expands only when evidence supports it.",
   },
   {
     title: "Reliability is visible.",
-    body: "The system should leave enough evidence to understand what happened and what needs attention.",
+    body: "The system should leave enough evidence to inspect failures, contain damage, and recover deliberately.",
   },
 ];

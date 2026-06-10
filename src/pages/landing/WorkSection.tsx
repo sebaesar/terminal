@@ -82,7 +82,7 @@ export function WorkSection({
         <header className="landing-sectionHeader">
           <p className="landing-kicker">Selected work</p>
           <h2 id="work-title">
-            Case studies where ownership changed the outcome.
+            Methodical ownership changed the outcome.
           </h2>
         </header>
 

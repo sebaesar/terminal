@@ -27,6 +27,7 @@ import {
 } from "./landing/RecognitionSection";
 import { shouldAdvanceRecognitionEntrance } from "./landing/recognitionEntranceNavigation";
 import { SectionProgress } from "./landing/SectionProgress";
+import { ShaderWallpaper } from "./landing/ShaderWallpaper";
 import { WorkSection } from "./landing/WorkSection";
 import { caseStudies } from "./landing/content";
 import type { LandingSectionId } from "./landing/types";
@@ -564,9 +565,11 @@ export default function LandingPage({
     <main
       ref={landingRootRef}
       className="landing-page"
+      data-section={activeSection}
       onClickCapture={suppressClickAfterDrag}
       onContextMenu={openContextMenu}
     >
+      <ShaderWallpaper activeSection={activeSection} />
       <LandingHeader
         activeSection={activeSection}
         blogHref={blogHref}
@@ -592,8 +595,8 @@ export default function LandingPage({
           <button
             type="button"
             className="landing-askAiPrompt"
-            aria-label="Ask AI about fit"
-            title="Ask AI about fit"
+            aria-label="Ask AI about my method"
+            title="Ask AI about my method"
             onClick={onAskAi}
           >
             <span className="landing-askAiSparkles" aria-hidden="true">
@@ -610,7 +613,7 @@ export default function LandingPage({
               </Suspense>
             </span>
             <span className="landing-askAiPromptLabel">
-              Ask AI about fit
+              Ask AI about method
             </span>
           </button>
         </motion.div>
@@ -671,7 +674,7 @@ export default function LandingPage({
             role="menuitem"
             onClick={() => runContextAction(onAskAi)}
           >
-            Ask AI
+            Ask AI about method
           </button>
           <button
             type="button"
