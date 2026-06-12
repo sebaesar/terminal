@@ -21,6 +21,7 @@
     "@tsparticles/slim": "^3.9.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "highlight.js": "^11.11.1",
     "ky": "^1.7.2",
     "lucide-react": "^0.561.0",
     "marked": "9.1.6",
