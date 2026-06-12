@@ -294,6 +294,16 @@ describe("default commands", () => {
       registry,
     });
     expect(JSON.stringify(listOut)).toContain("Release Gates for Live Funds");
+    const listLines = Array.isArray(listOut) ? listOut : [listOut];
+    const workLine = listLines.find(
+      (line): line is TerminalLine => Array.isArray(line),
+    );
+    const workSegment = workLine?.find(
+      (segment): segment is Extract<TerminalLine[number], { type: "work" }> =>
+        segment.type === "work",
+    );
+    expect(workSegment?.clientProof?.title).toBe("Experiences");
+    expect(workSegment?.clientProof?.items).toHaveLength(8);
 
     const readOut = await selectedCasesHandler?.({
       args: ["read", "security-triage-automation"],

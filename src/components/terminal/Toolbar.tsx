@@ -7,12 +7,12 @@ import { openChatMaximized, useChatStore } from "@stores/chatStore";
 
 type TerminalToolbarProps = {
   onOpenSearch: () => void;
-  onAskAi?: () => void;
+  showAskAi?: boolean;
 };
 
 export function TerminalToolbar({
   onOpenSearch,
-  onAskAi,
+  showAskAi = true,
 }: TerminalToolbarProps) {
   const unread = useChatStore((state) => state.unread);
   const isChatActive = useChatStore((state) => state.isOpen && !state.isMinimized);
@@ -26,14 +26,9 @@ export function TerminalToolbar({
 
   const handleAskClick = () => {
     setIsExpanded(true);
-    if (onAskAi) {
-      onAskAi();
-      return;
-    }
     openChatMaximized();
     requestAnimationFrame(() => {
-      const chatInput =
-        document.querySelector<HTMLTextAreaElement>(".chat-input");
+      const chatInput = document.querySelector<HTMLTextAreaElement>(".chat-input");
       chatInput?.focus();
     });
   };
@@ -63,29 +58,31 @@ export function TerminalToolbar({
         ) : null}
       </button>
 
-      <div className="terminal-askAiSlot">
-        <button
-          type="button"
-          className={`terminal-askAi${isExpanded ? " is-expanded" : ""}${isChatActive ? " is-active" : ""}`}
-          aria-label="Open chatbot"
-          title="Open chatbot"
-          onClick={handleAskClick}
-        >
-          <span className="terminal-askAiSparkles" aria-hidden="true">
-            <SparklesCore
-              background="transparent"
-              className="terminal-askAiSparklesCanvas"
-              minSize={0.4}
-              maxSize={1.4}
-              particleColor={sparkleColor}
-              particleDensity={120}
-              speed={0.5}
-            />
-          </span>
-          <span className="terminal-askAi-label">Ask AI</span>
-          {unread > 0 ? <span className="terminal-toolbar-dot" aria-hidden="true" /> : null}
-        </button>
-      </div>
+      {showAskAi ? (
+        <div className="terminal-askAiSlot">
+          <button
+            type="button"
+            className={`terminal-askAi${isExpanded ? " is-expanded" : ""}${isChatActive ? " is-active" : ""}`}
+            aria-label="Open chatbot"
+            title="Open chatbot"
+            onClick={handleAskClick}
+          >
+            <span className="terminal-askAiSparkles" aria-hidden="true">
+              <SparklesCore
+                background="transparent"
+                className="terminal-askAiSparklesCanvas"
+                minSize={0.4}
+                maxSize={1.4}
+                particleColor={sparkleColor}
+                particleDensity={120}
+                speed={0.5}
+              />
+            </span>
+            <span className="terminal-askAi-label">Ask AI about fit</span>
+            {unread > 0 ? <span className="terminal-toolbar-dot" aria-hidden="true" /> : null}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

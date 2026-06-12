@@ -17,6 +17,7 @@ import {
   ActivityTreeNode,
   LogItem,
   SubcommandSuggestContext,
+  ClientProofSegment,
 } from "@types";
 import {
   buildAvatarSegment,
@@ -41,14 +42,9 @@ import {
   sanitizeSearchQuery,
 } from "@data/searchIndex";
 import { searchStore } from "@stores/searchStore";
+import { CLIENT_PROOF_ITEMS, CLIENT_PROOF_TITLE } from "@data/clientProof";
 
 export const DEFAULT_SUGGESTED_COMMANDS: CommandButton[] = [
-  {
-    command: "services",
-    label: "Services",
-    variant: "secondary",
-    typing: "simulate",
-  },
   {
     command: "selected_cases",
     label: "Case Studies",
@@ -57,25 +53,25 @@ export const DEFAULT_SUGGESTED_COMMANDS: CommandButton[] = [
   },
   {
     command: "download resume",
-    label: "About",
+    label: "Resume",
     variant: "secondary",
     typing: "simulate",
   },
   {
     command: "contact",
-    label: "Start a Conversation",
+    label: "Contact me",
     variant: "primary",
-    typing: "simulate",
-  },
-  {
-    command: "blog",
-    label: "Insights",
-    variant: "secondary",
     typing: "simulate",
   },
 ];
 
 const APP_VERSION = packageJson.version;
+
+const selectedCasesClientProof: ClientProofSegment = {
+  type: "clientProof",
+  title: CLIENT_PROOF_TITLE,
+  items: CLIENT_PROOF_ITEMS,
+};
 
 const createTextSegment = (text: string): TextSegment => ({
   type: "text",
@@ -545,7 +541,7 @@ export function registerDefaultCommands({
   const fontController = appearanceController?.font;
   const colorController = appearanceController?.color;
   const contact = props.contact || {
-    email: "onboarding@failuresmith.xyz",
+    email: "miladtsx@gmail.com",
   };
   if (typeof document !== "undefined") {
     applyMotionMode(readStoredMotion());
@@ -1473,6 +1469,7 @@ An investor-ready MVP shipped in 10 days for under $300, avoiding a larger upfro
               {
                 type: "work",
                 items: orderedCaseStudies,
+                clientProof: selectedCasesClientProof,
               },
             ],
           ];

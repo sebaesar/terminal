@@ -12,7 +12,7 @@ export type ChatAction =
       href: string;
     };
 
-export const BOOKING_URL = "https://cal.com/failuresmith/intro";
+export const BOOKING_URL = "https://cal.com/sebaesar/intro";
 
 const URL_PATTERN = /\bhttps?:\/\/[^\s<>)\]]+/gi;
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;

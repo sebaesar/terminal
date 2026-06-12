@@ -8,7 +8,7 @@ import {
 import { TerminalModel } from "@components/terminal/terminalModel";
 import { appendHistory, loadHistory } from "@components/terminal/historyStore";
 import {
-  ScreenProps,
+  TerminalProps,
   TerminalLineInput,
   ControllerReturn,
   TerminalState,
@@ -17,7 +17,6 @@ import {
   AvatarSegment,
   MarkdownSegment,
   CommandButton,
-  ClientProofSegment,
   OperatingModelSegment,
 } from "@types";
 import {
@@ -30,7 +29,6 @@ import {
   simulateTypingSequence,
 } from "@utils";
 import { useTelemetry } from "@hooks/useTelemetry";
-import { CLIENT_PROOF_ITEMS, CLIENT_PROOF_TITLE } from "@data/clientProof";
 
 const isLineSegment = (value: unknown): value is LineSegment =>
   typeof value === "object" &&
@@ -38,7 +36,8 @@ const isLineSegment = (value: unknown): value is LineSegment =>
   "type" in value &&
   typeof (value as { type?: unknown }).type === "string";
 
-export function useTerminalController(props: ScreenProps): ControllerReturn {
+export function useTerminalController(props: TerminalProps): ControllerReturn {
+  const isEmbeddedController = props.controllerMode === "embedded";
   const typeSfxRef = useRef<ReturnType<typeof createTypeSfx> | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -54,7 +53,9 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
     return parseShareCommandsFromLocation(window.location);
   }, []);
   const sharedCommandsRef = useRef<string[] | null>(
-    parsedShareCommands.length ? parsedShareCommands : null,
+    !isEmbeddedController && parsedShareCommands.length
+      ? parsedShareCommands
+      : null,
   );
   const themes = useMemo(() => listThemes(), []);
   const { logEvent, logError } = useTelemetry();
@@ -313,7 +314,7 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
     count: number;
   } | null>(null);
   const [introStartVisible, setIntroStartVisible] = useState(false);
-  const [showIntroInput, setShowIntroInput] = useState(false);
+  const [showIntroInput, setShowIntroInput] = useState(isEmbeddedController);
 
   const cancelTyping = useCallback(() => {
     typingTimersRef.current.forEach((id) => clearTimeout(id));
@@ -357,9 +358,17 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
       type: "markdown",
       markdown: `
 <div class="intro-hero">
-  <div class="intro-trustline font-mono">When nobody owns execution, everything slows down.</div>
-  <div class="intro-headline">Ownership for founders who need decisions, deadlines, and delivery they can trust.</div>
-  <div class="intro-subline font-mono">I turn technical uncertainty, contractor drift, and conflicting advice into one accountable path from decision to production.</div>
+  <div class="intro-trustline font-mono">You've paid for code that never shipped?</div>
+  <div class="intro-headline">I work in small, reversible steps:</div>
+  <div class="intro-subline font-mono">
+  <ul>
+  <li>working software every week</li>
+  <li>decisions in writing</li>
+  <li>your repo in your name from day one. </li>
+  </ul>
+  Leaving is easy — that's the point.
+
+  </div>
 </div>
       `.trim(),
     };
@@ -426,12 +435,6 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
 </section>
       `.trim(),
     };
-    const clientProof: ClientProofSegment = {
-      type: "clientProof",
-      title: CLIENT_PROOF_TITLE,
-      items: CLIENT_PROOF_ITEMS,
-    };
-
     const primaryCtaLine: LineSegment[] = [];
     const navCtaLine: LineSegment[] = [];
 
@@ -458,7 +461,7 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
       navCtaLine.push(button);
     });
 
-    const introCells: TerminalLineInput[] = [
+    const startLines: TerminalLineInput[] = [
       [
         buildAvatarSegment([""], {
           label: "",
@@ -466,8 +469,7 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
           onClickCommand: "about",
           disableModal: true,
         }),
-        // introMarkdown,
-        clientProof,
+        introMarkdown,
       ],
       primaryCtaLine,
       navCtaLine,
@@ -476,7 +478,7 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
       "",
     ];
 
-    if (!introCells.length) {
+    if (!startLines.length) {
       introTypingRef.current = false;
       setShowIntroInput(true);
       focusInput();
@@ -488,11 +490,11 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
     const renderIntroInstantly = () => {
       const blankIndex = model.lines.length;
       model.pushLine("");
-      model.pushLines(introCells);
+      model.pushLines(startLines);
       setLinesFromModel();
       setIntroStartLineRange({
         start: blankIndex + 1,
-        count: introCells.length,
+        count: startLines.length,
       });
       setIntroStartVisible(true);
       introTypingRef.current = false;
@@ -519,7 +521,7 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
     const timers: number[] = [];
 
     const typeIntroStartLines = (extraTimers: number[]) => {
-      if (!introCells.length) {
+      if (!startLines.length) {
         setShowIntroInput(true);
         focusInput();
         return;
@@ -650,17 +652,17 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
         return out;
       };
 
-      const lineTexts = introCells.map(flattenLine);
+      const lineTexts = startLines.map(flattenLine);
       const blankIndex = model.lines.length;
       model.pushLine("");
-      introCells.forEach(() => model.pushLine(""));
+      startLines.forEach(() => model.pushLine(""));
       setLinesFromModel();
 
       const firstLineIndex = blankIndex + 1;
       // Mark intro suggestion block immediately so mobile layout applies from first paint.
       setIntroStartLineRange({
         start: firstLineIndex,
-        count: introCells.length,
+        count: startLines.length,
       });
       setIntroStartVisible(true);
       let offset = 120;
@@ -672,7 +674,7 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
           const timer = window.setTimeout(() => {
             model.setLine(
               firstLineIndex + lineIndex,
-              sliceLine(introCells[lineIndex], i + 1),
+              sliceLine(startLines[lineIndex], i + 1),
             );
             setLinesFromModel();
           }, offset);
@@ -682,13 +684,13 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
       });
 
       const finalizeTimer = window.setTimeout(() => {
-        introCells.forEach((line, index) => {
+        startLines.forEach((line, index) => {
           model.setLine(firstLineIndex + index, line);
         });
         setLinesFromModel();
         setIntroStartLineRange({
           start: firstLineIndex,
-          count: introCells.length,
+          count: startLines.length,
         });
         introTypingRef.current = false;
         setShowIntroInput(true);
@@ -870,6 +872,12 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
     setShowIntroInput,
   ]);
 
+  const clearScreen = useCallback(() => {
+    modelRef.current.clear();
+    setLinesFromModel([""]);
+    focusInput();
+  }, [focusInput, setLinesFromModel]);
+
   const handleGlobalPointerDown = useCallback(
     (event: PointerEvent) => {
       const target = event.target as Element | null;
@@ -877,7 +885,9 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
         target &&
         (target.closest?.(".t-output") ||
           target.closest?.("a") ||
-          target.closest?.(".t-searchModal"))
+          target.closest?.(".t-searchModal") ||
+          target.closest?.(".terminal-session-window") ||
+          target.closest?.(".chat-window"))
       )
         return;
       requestAnimationFrame(() => focusInput());
@@ -900,22 +910,23 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
         // Don't steal focus from search modal inputs
         const isSearchOpen = !!document.querySelector(".t-searchModal");
         const isInSearch = active && active.closest(".t-searchModal");
+        const isInDock =
+          active &&
+          active.closest(".terminal-session-window, .chat-window");
 
-        if (isSearchOpen && isInSearch) return;
+        if ((isSearchOpen && isInSearch) || isInDock) return;
 
-        if (input && active !== input && !isEditable && !isInSearch) {
+        if (input && active !== input && !isEditable && !isInSearch && !isInDock) {
           focusInput();
         }
       }
 
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "l") {
         event.preventDefault();
-        modelRef.current.clear();
-        setLinesFromModel([""]);
-        focusInput();
+        clearScreen();
       }
     },
-    [focusInput, setLinesFromModel],
+    [clearScreen, focusInput],
   );
 
   const canNavigateHistory = useCallback(() => {
@@ -1243,7 +1254,12 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
 
       const sharedStarted = triggerSharedRunSequence();
       if (!sharedStarted && !model.lines.length) {
-        startIntroSequence();
+        if (isEmbeddedController) {
+          setShowIntroInput(true);
+          setLinesFromModel();
+        } else {
+          startIntroSequence();
+        }
       }
 
       hasInitializedRef.current = true;
@@ -1261,16 +1277,20 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
     })();
 
     focusInput();
-    document.addEventListener("keydown", handleGlobalKeyDown);
-    document.addEventListener("pointerdown", handleGlobalPointerDown, true);
+    if (!isEmbeddedController) {
+      document.addEventListener("keydown", handleGlobalKeyDown);
+      document.addEventListener("pointerdown", handleGlobalPointerDown, true);
+    }
 
     return () => {
-      document.removeEventListener("keydown", handleGlobalKeyDown);
-      document.removeEventListener(
-        "pointerdown",
-        handleGlobalPointerDown,
-        true,
-      );
+      if (!isEmbeddedController) {
+        document.removeEventListener("keydown", handleGlobalKeyDown);
+        document.removeEventListener(
+          "pointerdown",
+          handleGlobalPointerDown,
+          true,
+        );
+      }
       cancelTyping();
       cancelIntroTyping();
       model.clear();
@@ -1283,6 +1303,7 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
     focusInput,
     handleGlobalKeyDown,
     handleGlobalPointerDown,
+    isEmbeddedController,
     setLinesFromModel,
     startIntroSequence,
     triggerSharedRunSequence,
@@ -1298,6 +1319,7 @@ export function useTerminalController(props: ScreenProps): ControllerReturn {
     handleKeyDown,
     onInputChange,
     focusInput,
+    clearScreen,
     executeCommand,
     introStartLineRange,
     introStartVisible,

@@ -373,13 +373,6 @@ This repo is expected to feed public evidence.
 
 When creating docs or artifacts, prefer outputs that can be surfaced on the website, README, or case studies page.
 
-For the homepage background, preserve the founder-facing emotional message:
-technical concern is dissolving into calm, trust, and relief. Prefer
-iridescent dust-smoke-galaxy visuals with soft nebula clouds and subtle
-particles. Avoid fixed circle-heavy motifs, check/path diagrams, or
-binary/code-like `0`/`1` visuals as the primary metaphor; they read as
-technical decoration rather than reassurance for a non-technical solo founder.
-
 Artifacts should be legible to a hiring manager or technical lead scanning for:
 
 - judgment

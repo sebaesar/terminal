@@ -42,7 +42,6 @@ jobs:
       - run: pnpm build
         env:
           SERVICE_WORKER_VERSION: ${{ github.sha }}
-          SITE_URL: ${{ vars.SITE_URL }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

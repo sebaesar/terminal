@@ -1,11 +1,4 @@
-import React, {
-  type CSSProperties,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { marked } from "marked";
 import {
@@ -21,18 +14,11 @@ import {
   X,
 } from "lucide-react";
 import { useChatStore } from "@stores/chatStore";
-import { useFloatingWindowResize } from "@hooks/useFloatingWindowResize";
 import { getChatActions, getChatDisplayContent } from "./chatActions";
 import "./chat.css";
 
-const chatResizeInitialSize = { width: 500, height: 500 };
-const chatResizeMinSize = { width: 360, height: 360 };
-const floatingWindowTop = 86;
-const floatingWindowRight = 18;
-const restorePointerOffsetY = 20;
-const snapToTopThreshold = 8;
-const snapViewportMargin = 8;
-const activeFloatingWindowZIndex = 90;
+const CHAT_LAUNCHER_DELAY_MS = 3_000;
+const CHAT_LAUNCHER_AVATAR = "images/avatar.jpg";
 
 const SUGGESTED_PROMPTS = [
   "Can you turn my uncertainty into an execution plan?",
@@ -46,15 +32,11 @@ const SUGGESTED_PROMPTS = [
 type ChatDockProps = {
   onBookCall?: () => void;
   contactEmail?: string;
-  onActivate?: () => void;
-  windowZIndex?: number;
 };
 
 export function ChatDock({
   onBookCall,
-  contactEmail = "onboarding@failuresmith.xyz",
-  onActivate,
-  windowZIndex,
+  contactEmail = "miladtsx@gmail.com",
 }: ChatDockProps) {
   // Select all needed slices in one selector and shallow-compare to cut down on re-renders.
   const {
@@ -68,6 +50,7 @@ export function ChatDock({
     setInput,
     sendMessage,
     clear,
+    openChat,
     toggleChat,
     minimizeChat,
     cancel,
@@ -85,6 +68,7 @@ export function ChatDock({
       setInput: state.setInput,
       sendMessage: state.sendMessage,
       clear: state.clear,
+      openChat: state.openChat,
       toggleChat: state.toggleChat,
       minimizeChat: state.minimizeChat,
       cancel: state.cancel,
@@ -97,16 +81,12 @@ export function ChatDock({
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [showLauncher, setShowLauncher] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const activePointerRef = useRef<number | null>(null);
   const suggestedPromptSendingRef = useRef(false);
-  const resize = useFloatingWindowResize({
-    initialSize: chatResizeInitialSize,
-    minSize: chatResizeMinSize,
-    disabled: isMaximized,
-  });
 
   const focusInput = useCallback(
     () => requestAnimationFrame(() => inputRef.current?.focus()),
@@ -135,6 +115,11 @@ export function ChatDock({
   useEffect(() => {
     if (!isOpen) setIsMaximized(false);
   }, [isOpen]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowLauncher(true), CHAT_LAUNCHER_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (isOpen && maximizeOnOpen) {
@@ -173,31 +158,11 @@ export function ChatDock({
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (isMaximized) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
     const target = event.target;
     if (target instanceof Element && target.closest("button")) return;
     event.preventDefault();
-    if (isMaximized) {
-      const width = resize.size.width;
-      const height = resize.size.height;
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const left = Math.min(
-        Math.max(event.clientX - width / 2, snapViewportMargin),
-        Math.max(snapViewportMargin, viewportWidth - width - snapViewportMargin),
-      );
-      const top = Math.min(
-        Math.max(event.clientY - restorePointerOffsetY, snapViewportMargin),
-        Math.max(snapViewportMargin, viewportHeight - height - snapViewportMargin),
-      );
-      const baseLeft = viewportWidth - floatingWindowRight - width;
-
-      setIsMaximized(false);
-      setDragOffset({
-        x: left - baseLeft,
-        y: top - floatingWindowTop,
-      });
-    }
     dragStartRef.current = { x: event.clientX, y: event.clientY };
     activePointerRef.current = event.pointerId;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -206,18 +171,6 @@ export function ChatDock({
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging || !dragStartRef.current) return;
-    if (
-      !isMaximized &&
-      dragStartRef.current.y > snapToTopThreshold &&
-      event.clientY <= snapToTopThreshold
-    ) {
-      if (activePointerRef.current !== null) {
-        event.currentTarget.releasePointerCapture(activePointerRef.current);
-      }
-      setIsMaximized(true);
-      resetDragState();
-      return;
-    }
     const deltaX = event.clientX - dragStartRef.current.x;
     const deltaY = event.clientY - dragStartRef.current.y;
     if (deltaX === 0 && deltaY === 0) return;
@@ -236,7 +189,7 @@ export function ChatDock({
     endDrag(event);
   };
 
-  const showStartOptions = !messages.some((message) => message.role === "user");
+  const showToneSelector = !messages.some((message) => message.role === "user");
 
   const handleSuggestedPrompt = useCallback(
     async (prompt: string) => {
@@ -331,7 +284,7 @@ export function ChatDock({
       );
     });
 
-    if (showStartOptions) {
+    if (showToneSelector) {
       nodes.push(
         <div
           key="chat-start-options"
@@ -370,7 +323,7 @@ export function ChatDock({
     messages,
     onBookCall,
     contactEmail,
-    showStartOptions,
+    showToneSelector,
   ]);
 
   const send = async () => {
@@ -390,27 +343,39 @@ export function ChatDock({
     }
   };
 
-  const wrapTransformStyle: CSSProperties = {
-    ...resize.style,
+  const wrapTransformStyle = {
     transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
-    zIndex:
-      isDragging || resize.isResizing
-        ? activeFloatingWindowZIndex
-        : windowZIndex,
+    opacity: isDragging ? 0.5 : 1,
   };
+
+  const shouldShowLauncher = showLauncher && (!isOpen || isMinimized);
 
   return (
     <>
+      {shouldShowLauncher ? (
+        <button
+          type="button"
+          className="chat-launcher t-pressable"
+          aria-label="Open chatbot"
+          onClick={openChat}
+        >
+          <span className="chat-launcherPhoto" aria-hidden="true">
+            <img src={CHAT_LAUNCHER_AVATAR} alt="" />
+          </span>
+          <span className="chat-launcherStatus" aria-hidden="true" />
+          {unread > 0 ? (
+            <span className="chat-launcherUnread" aria-label={`${unread} unread messages`}>
+              {unread > 9 ? "9+" : unread}
+            </span>
+          ) : null}
+        </button>
+      ) : null}
       {isOpen && !isMinimized ? (
         <div
-          className={`chat-wrap${isMaximized ? " is-maximized" : ""}${
-            resize.resizeEnabled ? " is-resizable" : ""
-          }`}
+          className={`chat-wrap${isMaximized ? " is-maximized" : ""}`}
           role="dialog"
           aria-modal="false"
           onClick={focusInput}
-          onFocusCapture={onActivate}
-          onPointerDownCapture={onActivate}
           style={wrapTransformStyle}
         >
           <div className={`chat-window${isMaximized ? " is-maximized" : ""}`}>
@@ -482,7 +447,7 @@ export function ChatDock({
               <textarea
                 ref={inputRef}
                 className="chat-input"
-                placeholder="Describe your need"
+                placeholder="Say something"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -497,13 +462,6 @@ export function ChatDock({
                 {loading ? <StopCircle size={18} /> : <SendIcon size={18} />}
               </button>
             </div>
-            {resize.resizeEnabled ? (
-              <div
-                className="floating-resizeHandle"
-                aria-hidden="true"
-                {...resize.resizeHandleProps}
-              />
-            ) : null}
           </div>
         </div>
       ) : null}

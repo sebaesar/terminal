@@ -11,20 +11,17 @@ export interface CommandButton {
   typing?: "auto" | "simulate" | "instant";
 }
 
-export interface ScreenProps {
+export interface TerminalProps {
   prompt?: string;
   suggestedCommands?: CommandButton[];
   contact?: ContactInfo;
   sampleWorks?: SampleWork[];
   aboutLines?: string[];
   onBookCall?: () => void;
-  onAskAi?: () => void;
   appearanceController?: AppearanceController;
-  presentation?: "fullscreen" | "embedded";
-  showChatDock?: boolean;
+  controllerMode?: "main" | "embedded";
+  showAskAi?: boolean;
 }
-
-export type TerminalProps = ScreenProps;
 
 export type AppearanceController = {
   font?: TerminalFontController;
@@ -38,11 +35,11 @@ export type TerminalState = {
   tabMatches: string[];
   tabIndex: number;
   tabVisible: boolean;
-  lines: Cell[];
+  lines: TerminalLine[];
 };
 export type ControllerReturn = {
   ready: boolean;
-  lines: Cell[];
+  lines: TerminalLine[];
   input: string;
   prompt: string;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -50,6 +47,7 @@ export type ControllerReturn = {
   handleKeyDown: (event: ReactKeyboardEvent<HTMLTextAreaElement>) => void;
   onInputChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   focusInput: () => void;
+  clearScreen: () => void;
   executeCommand: (
     cmd: string,
     options?: { typing?: CommandButton["typing"] },
@@ -118,6 +116,7 @@ export type LogSegment = {
 export type WorkSegment = {
   type: "work";
   items: SampleWork[];
+  clientProof?: ClientProofSegment;
 };
 
 export type ClientProofItem = {
@@ -217,9 +216,8 @@ export type LineSegment =
   | ActivityTreeSegment
   | AvatarSegment
   | SearchHitsSegment;
-export type Cell = LineSegment[];
-export type TerminalLine = Cell;
-export type TerminalLineInput = string | Cell;
+export type TerminalLine = LineSegment[];
+export type TerminalLineInput = string | TerminalLine;
 
 export type ContactInfo = {
   email: string;
@@ -247,7 +245,7 @@ export type FileMeta = {
 };
 
 export type TerminalLineProps = {
-  line: Cell;
+  line: TerminalLine;
   lineIndex: number;
   className?: string;
   executeCommand: (
@@ -264,7 +262,7 @@ export type TerminalLineProps = {
 
 export type RegisterDefaultsArgs = {
   registry: CommandRegistry;
-  props: ScreenProps;
+  props: TerminalProps;
   model: TerminalModel;
   setLinesFromModel: (extraLines?: TerminalLineInput[]) => void;
   appearanceController?: AppearanceController;

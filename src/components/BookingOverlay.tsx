@@ -180,7 +180,7 @@ export function BookingOverlay({ open, onClose, email }: BookingOverlayProps) {
                 <p className="booking-fallbackTitle">Calendar slow?</p>
                 <div className="booking-fallbackLinks">
                   <a
-                    href="https://cal.com/failuresmith/intro"
+                    href="https://cal.com/sebaesar/intro"
                     target="_blank"
                     rel="noreferrer"
                     ref={fallbackPrimaryRef}
@@ -197,7 +197,7 @@ export function BookingOverlay({ open, onClose, email }: BookingOverlayProps) {
           <iframe
             className="booking-embed"
             title="Cal.com booking embed"
-            src={`https://cal.com/failuresmith/intro?embed=true&primary_color=8dd0ff`}
+            src={`https://cal.com/sebaesar/intro?embed=true&primary_color=8dd0ff`}
             allowFullScreen
             aria-busy={loading}
           />

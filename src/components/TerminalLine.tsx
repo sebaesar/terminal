@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { MarkdownBlock } from "@components/MarkdownBlock";
 import { SparklesCore } from "@components/ui/sparkles";
@@ -589,7 +596,8 @@ function OperatingModel({ segment }: { segment: OperatingModelSegment }) {
 function ClientProofStrip({ segment }: { segment: ClientProofSegment }) {
   const [activeClient, setActiveClient] = useState<ClientProofItem | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
-  const headingId = "intro-client-proof-title";
+  const instanceId = useId().replace(/:/g, "");
+  const headingId = `intro-client-proof-title-${instanceId}`;
 
   useEffect(() => {
     if (!activeClient) return;
@@ -610,7 +618,7 @@ function ClientProofStrip({ segment }: { segment: ClientProofSegment }) {
             className="intro-clientModal"
             role="dialog"
             aria-modal="true"
-            aria-labelledby={`intro-client-modal-title-${activeClient.slug}`}
+            aria-labelledby={`intro-client-modal-title-${instanceId}-${activeClient.slug}`}
             onClick={() => setActiveClient(null)}
           >
             <div
@@ -633,7 +641,7 @@ function ClientProofStrip({ segment }: { segment: ClientProofSegment }) {
                 decoding="async"
               />
               <span
-                id={`intro-client-modal-title-${activeClient.slug}`}
+                id={`intro-client-modal-title-${instanceId}-${activeClient.slug}`}
                 className="intro-clientModalTitle"
               >
                 {activeClient.name}
@@ -660,7 +668,7 @@ function ClientProofStrip({ segment }: { segment: ClientProofSegment }) {
         </span>
         <span className="intro-clientGrid" role="list">
           {segment.items.map((item) => {
-            const tooltipId = `intro-client-${item.slug}-tooltip`;
+            const tooltipId = `intro-client-${instanceId}-${item.slug}-tooltip`;
             return (
               <span
                 key={item.slug}
@@ -1068,6 +1076,9 @@ function WorkGrid({ segment }: { segment: WorkSegment }) {
         <div className="t-proofTitle font-extralight">
           Less fragility. More control
         </div>
+        {segment.clientProof ? (
+          <ClientProofStrip segment={segment.clientProof} />
+        ) : null}
         <div className="t-proofSubtitle"></div>
       </div>
 

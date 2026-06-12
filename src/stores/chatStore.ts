@@ -12,11 +12,6 @@ export type ChatMessage = {
   createdAt: number;
 };
 
-type ChatHistoryMessage = {
-  role: ChatRole;
-  content: string;
-};
-
 type ChatStatus = {
   isOpen: boolean;
   isMinimized: boolean;
@@ -42,30 +37,13 @@ type ChatStore = ChatStatus & {
   setMaximizeOnOpen: (value: boolean) => void;
 };
 
-type PersistedChatState = Partial<ChatStatus> & {
-  messages?: ChatMessage[];
-  tone?: unknown;
-};
-
 const CHATBOT_URL = import.meta.env.VITE_CHATBOT_URL;
-const CHAT_RESPONSE_TONE = "non-technical";
 
 const uuid = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
   }
   return Math.random().toString(36).slice(2);
-};
-
-const buildChatHistory = (
-  messages: ChatMessage[],
-): ChatHistoryMessage[] | null => {
-  const history = messages
-    .slice(-12) // avoid unnecessary bandwidth
-    .filter((m) => m.role === "user" || m.role === "assistant")
-    .map((m) => ({ role: m.role, content: m.content })); // drop id/createdAt
-
-  return history.length ? history : null;
 };
 
 // Lightweight IndexedDB storage for zustand persist.
@@ -139,16 +117,6 @@ const storage = createJSONStorage(() => {
       ),
   };
 });
-
-const removeLegacyResponseStyle = (
-  persistedState: unknown,
-): PersistedChatState => {
-  if (!persistedState || typeof persistedState !== "object") return {};
-
-  const state = { ...(persistedState as PersistedChatState) };
-  delete state.tone;
-  return state;
-};
 
 export const useChatStore = create<ChatStore>()(
   persist(
@@ -334,8 +302,6 @@ export const useChatStore = create<ChatStore>()(
         },
         sendMessage: async (text?: string) => {
           const state = get();
-          if (state.loading) return;
-
           const content = (text ?? state.input).trim();
           if (!content) return;
 
@@ -358,12 +324,15 @@ export const useChatStore = create<ChatStore>()(
             userInput: content,
             message: "chat user message",
             context: {
-              responseTone: CHAT_RESPONSE_TONE,
               messageId: userMessage.id,
             },
           });
 
-          const history = buildChatHistory(state.messages);
+          const rawHistory = [...get().messages];
+          const history = rawHistory
+            .slice(-12) // avoid unnecessary bandwidth
+            .filter((m) => m.role === "user" || m.role === "assistant")
+            .map((m) => ({ role: m.role, content: m.content })); // drop id/createdAt
 
           abortController = new AbortController();
 
@@ -372,7 +341,6 @@ export const useChatStore = create<ChatStore>()(
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                tone: CHAT_RESPONSE_TONE,
                 history,
                 message: content,
               }),
@@ -468,7 +436,6 @@ export const useChatStore = create<ChatStore>()(
       name: "chatbot-store",
       storage,
       version: 2,
-      migrate: removeLegacyResponseStyle,
       partialize: (state) => ({
         messages: state.messages,
         isOpen: state.isOpen,
@@ -479,6 +446,15 @@ export const useChatStore = create<ChatStore>()(
         unread: state.unread,
         error: state.error,
       }),
+      migrate: (persistedState) => {
+        if (!persistedState || typeof persistedState !== "object") {
+          return persistedState as ChatStore;
+        }
+
+        const state = { ...(persistedState as Record<string, unknown>) };
+        delete state.tone;
+        return state as ChatStore;
+      },
     },
   ),
 );

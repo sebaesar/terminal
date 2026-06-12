@@ -5,26 +5,22 @@ import { useTerminalColors } from "@hooks/useTerminalColors";
 import { useNotificationOverlay } from "@hooks/useNotificationOverlay";
 import { useAppVersionRefresh } from "@hooks/useAppVersionRefresh";
 import { NotificationOverlay } from "@components/NotificationOverlay";
-import { Display } from "@components/Display";
-import { ScreenProps } from "@types";
+import { TerminalLineRow } from "@components/TerminalLine";
+import { TerminalProps } from "@types";
 import {
   useUiStore,
   useShallow,
 } from "@stores/uiStore";
-import ChatDock from "./chat";
 import { SearchModal } from "./SearchModal";
+import TerminalCommandDock from "./TerminalCommandDock";
 import { TerminalToolbar } from "./Toolbar";
 import { searchStore } from "@stores/searchStore";
-import { openChatMaximized } from "@stores/chatStore";
 
 const MENU_WIDTH = 260;
 const MENU_HEIGHT = 200;
 const CLAMP_MARGIN = 6;
 
-export default function Screen(props: ScreenProps) {
-  const { onAskAi } = props;
-  const isEmbedded = props.presentation === "embedded";
-  const showChatDock = props.showChatDock !== false;
+export default function Terminal(props: TerminalProps) {
   const fontController = useTerminalFonts();
   const colorController = useTerminalColors();
   const currentColor = colorController.getCurrentColor();
@@ -42,6 +38,7 @@ export default function Screen(props: ScreenProps) {
     handleKeyDown,
     onInputChange,
     focusInput,
+    clearScreen,
     executeCommand,
     introStartLineRange,
     introStartVisible,
@@ -57,6 +54,7 @@ export default function Screen(props: ScreenProps) {
     x: number;
     y: number;
   } | null>(null);
+  const [terminalDockOpen, setTerminalDockOpen] = useState(false);
   const { notification, showNotification, dismiss } = useNotificationOverlay();
   useAppVersionRefresh(showNotification);
   const fontLoading = useUiStore(
@@ -121,6 +119,7 @@ export default function Screen(props: ScreenProps) {
         (target.closest(".t-output") ||
           target.closest("a") ||
           target.closest(".chat-window") ||
+          target.closest(".terminal-session-window") ||
           target.closest(".t-searchModal") ||
           target.closest(".terminal-toolbar"))
       ) {
@@ -134,37 +133,33 @@ export default function Screen(props: ScreenProps) {
   const contextMenuItems = useMemo(
     () => [
       {
-        id: "ask-ai",
-        label: "Ask AI",
-        action: () => {
-          if (onAskAi) {
-            onAskAi();
-            return;
-          }
-          openChatMaximized();
-          requestAnimationFrame(() => {
-            const chatInput =
-              document.querySelector<HTMLTextAreaElement>(".chat-input");
-            chatInput?.focus();
-          });
-        },
+        id: "terminal",
+        label: "Terminal",
+        meta: "Run commands without the intro",
+        action: () => setTerminalDockOpen(true),
       },
       {
-        id: "open-terminal",
-        label: "Open Terminal",
-        action: focusInput,
+        id: "human",
+        label: "Hire me",
+        meta: "Get accountable execution ownership",
+        action: () => executeCommand("contact"),
       },
     ],
-    [focusInput, onAskAi]
+    [executeCommand]
   );
 
   const handleContextMenu = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      event.preventDefault();
       const target = event.target as Element | null;
-      if (target && target.closest("input, textarea, button")) {
+      if (
+        target &&
+        target.closest(
+          "input, textarea, button, .chat-window, .terminal-session-window, .t-searchModal",
+        )
+      ) {
         return;
       }
+      event.preventDefault();
       focusInput();
       setContextMenu({
         x: event.clientX,
@@ -211,7 +206,13 @@ export default function Screen(props: ScreenProps) {
 
   useEffect(() => {
     const handleSearchShortcut = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "k") {
+      const key = event.key.toLowerCase();
+      const isSearchShortcut =
+        (key === "k" || (event.shiftKey && key === "f")) &&
+        (event.ctrlKey || event.metaKey) &&
+        !event.altKey;
+
+      if (isSearchShortcut) {
         event.preventDefault();
         openSearch();
       }
@@ -220,6 +221,29 @@ export default function Screen(props: ScreenProps) {
     document.addEventListener("keydown", handleSearchShortcut);
     return () => document.removeEventListener("keydown", handleSearchShortcut);
   }, [openSearch]);
+
+  useEffect(() => {
+    if (props.controllerMode !== "embedded") return;
+    const handleEmbeddedClearShortcut = (event: KeyboardEvent) => {
+      const target = event.target as Element | null;
+      if (
+        target?.closest(
+          ".t-searchModal, .chat-window, .terminal-session-window",
+        )
+      ) {
+        return;
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "l") {
+        event.preventDefault();
+        clearScreen();
+      }
+    };
+
+    document.addEventListener("keydown", handleEmbeddedClearShortcut);
+    return () =>
+      document.removeEventListener("keydown", handleEmbeddedClearShortcut);
+  }, [clearScreen, props.controllerMode]);
 
   const rootStyle = useMemo<React.CSSProperties>(
     () => ({ fontSize: `${terminalFontSize}px` }),
@@ -427,11 +451,7 @@ export default function Screen(props: ScreenProps) {
 
   return (
     <div
-      className={
-        "t-root" +
-        (ready ? " is-ready" : "") +
-        (isEmbedded ? " is-embedded" : "")
-      }
+      className={"t-root" + (ready ? " is-ready" : "")}
       style={rootStyle}
       onMouseDown={handleMouseDown}
       onContextMenu={handleContextMenu}
@@ -448,18 +468,51 @@ export default function Screen(props: ScreenProps) {
         </div>
       ) : null}
       <div className="t-wrap" ref={wrapScrollRef}>
-        <Display
-          body={lines}
-          prompt={prompt}
-          executeCommand={executeCommand}
-          introStartLineRange={introRange}
-          introStartVisible={introStartVisible}
-          hiddenLines={hiddenLines}
-          commandLookup={commandLookup}
-          latestCommandIndex={latestCommandIndex}
-          collapsedCommands={collapsedCommands}
-          onToggleCommand={toggleCollapse}
-        />
+        <pre className="t-output" aria-live="polite">
+          {lines.map((line, index) => {
+            const isIntroLine =
+              !!introRange &&
+              index >= introRange.start &&
+              index < introRange.start + introRange.count;
+            const introOffset =
+              isIntroLine && introRange ? index - introRange.start : null;
+            const introClassSuffix =
+              introOffset === 1
+                ? " intro-ctaPrimary"
+                : introOffset === 2
+                  ? " intro-ctaNav"
+                  : "";
+            const className = isIntroLine
+              ? `intro-start-line${introStartVisible ? " is-visible" : ""}${introClassSuffix}`
+              : undefined;
+
+            if (hiddenLines.has(index)) return null;
+
+            const commandMeta = commandLookup.get(index);
+            const isCommandLine = Boolean(commandMeta);
+            const isCollapsed = isCommandLine && collapsedCommands[index];
+            const isHistoricalCommand =
+              isCommandLine && latestCommandIndex !== null && index < latestCommandIndex;
+
+            return (
+              <span key={`line-${index}`}>
+                <TerminalLineRow
+                  line={line}
+                  lineIndex={index}
+                  className={className}
+                  executeCommand={executeCommand}
+                  isCommandLine={isCommandLine}
+                  isCollapsed={isCollapsed}
+                  isHistoricalCommand={isHistoricalCommand}
+                  prompt={prompt}
+                  commandText={commandMeta?.commandText}
+                  onToggleCollapse={isCommandLine ? () => toggleCollapse(index) : undefined}
+                />
+                {index < lines.length - 1 ? "\n" : null}
+              </span>
+            );
+          })}
+        </pre>
 
         <div
           className={`t-inputRow${showInput ? "" : " intro-hidden"}`}
@@ -537,20 +590,25 @@ export default function Screen(props: ScreenProps) {
                 }}
               >
                 <span>{item.label}</span>
+                <small>{item.meta}</small>
               </button>
             ))}
+            <div className="t-contextMenuDivider" />
           </div>
         ) : null}
       </div>
       <TerminalToolbar
         onOpenSearch={openSearch}
-        onAskAi={onAskAi}
+        showAskAi={props.showAskAi}
       />
       <SearchModal executeCommand={executeCommand} />
-      {showChatDock ? (
-        <ChatDock
+      {terminalDockOpen ? (
+        <TerminalCommandDock
+          open
+          onClose={() => setTerminalDockOpen(false)}
           onBookCall={props.onBookCall}
-          contactEmail={props.contact?.email}
+          contact={props.contact}
+          appearanceController={appearanceController}
         />
       ) : null}
     </div>
