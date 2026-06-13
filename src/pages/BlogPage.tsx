@@ -196,7 +196,7 @@ export default function BlogPage({ slug }: BlogPageProps) {
     [slug],
   );
   const pageClassName = useBlogEntranceClass(slug);
-  const title = "Blog | FS.dev";
+  const title = "Blog | Milad";
   const description = post?.summary || BLOG_DESCRIPTION;
 
   useEffect(() => {

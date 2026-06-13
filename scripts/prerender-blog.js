@@ -349,7 +349,7 @@ async function main() {
     "blog",
     template,
     {
-      title: "Blog | FS.dev",
+      title: "Blog | Milad",
       description:
         "FailureSmith notes on reliability, automation risk, execution ownership, and production systems.",
     },
@@ -361,7 +361,7 @@ async function main() {
       path.join("blog", post.slug),
       template,
       {
-        title: `${post.title} | FS.dev`,
+        title: `${post.title} | Milad`,
         description:
           post.summary ||
           `FailureSmith blog post: ${post.title}.`,
