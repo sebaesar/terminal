@@ -88,6 +88,22 @@
     font-display: swap;
   }
 
+  @font-face {
+    font-family: "DM Sans";
+    src: url("/fonts/dm-sans-latin.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Space Grotesk";
+    src: url("/fonts/space-grotesk-latin.woff2") format("woff2");
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
   body {
     margin: 0;
     background: transparent;
@@ -2890,7 +2906,7 @@
   }
 
   .t-markdown--blog .t-markdownBody {
-    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-family: "DM Sans", system-ui, sans-serif;
     font-size: 17px;
     line-height: 1.68;
     max-width: 68ch;
@@ -2924,6 +2940,7 @@
   .t-markdownBody h5,
   .t-markdownBody h6 {
     margin: 1.45em 0 0.5em;
+    font-family: "Space Grotesk", system-ui, sans-serif;
     font-weight: 700;
     color: var(--accent);
     color: color-mix(in srgb, var(--accent) 70%, var(--text) 30%);
@@ -4483,7 +4500,7 @@
 .blog-nav {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 8px;
   max-width: 860px;
   margin: 0 auto;
 }
@@ -4515,20 +4532,42 @@
 
 .blog-homeLink,
 .blog-backLink {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--blog-text-muted);
   text-decoration: none;
-  letter-spacing: 0.3px;
+  letter-spacing: 0;
 }
 
-.blog-homeLink:hover,
-.blog-backLink:hover {
+.blog-homeLink {
+  gap: 6px;
+}
+
+.blog-backLink {
   color: var(--blog-text);
 }
 
-.blog-backLink::before {
-  content: "←  ";
+a.blog-homeLink:hover,
+a.blog-backLink:hover {
+  color: var(--blog-text);
+}
+
+.blog-homeIcon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: currentColor;
+}
+
+.blog-breadcrumbChevron {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  color: var(--blog-text-muted);
+  opacity: 0.72;
 }
 
 /* List page */

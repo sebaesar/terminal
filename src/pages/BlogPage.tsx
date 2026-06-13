@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MarkdownBlock } from "@components/MarkdownBlock";
 import { blogIndex, BlogPost } from "@data/blogIndex";
 import { withBasePath } from "@utils/appRouting";
-import { Clock, Moon, Sun } from "lucide-react";
+import { ChevronRight, Clock, Home, Moon, Sun } from "lucide-react";
 import { BlogComments } from "./BlogComments";
 
 type BlogPageProps = {
@@ -148,17 +148,25 @@ type BlogNavigationProps = {
 };
 
 function BlogNavigation({ showBlogLink = false, isLight, onToggleTheme }: BlogNavigationProps) {
+  const blogCrumb = showBlogLink ? (
+    <a className="blog-backLink" href={withBasePath("/blog/")}>
+      Blog
+    </a>
+  ) : (
+    <span className="blog-backLink" aria-current="page">
+      Blog
+    </span>
+  );
+
   return (
     <header className="blog-siteHeader" aria-label="Primary">
       <nav className="blog-nav" aria-label="Blog navigation">
         <a className="blog-homeLink" href={withBasePath("/")}>
-          Home
+          <Home className="blog-homeIcon" size={16} strokeWidth={2} aria-hidden="true" />
+          <span>Milad</span>
         </a>
-        {showBlogLink ? (
-          <a className="blog-backLink" href={withBasePath("/blog/")}>
-            Blog
-          </a>
-        ) : null}
+        <ChevronRight className="blog-breadcrumbChevron" size={15} strokeWidth={2.1} aria-hidden="true" />
+        {blogCrumb}
         <div className="blog-navEnd">
           <button
             className="blog-themeToggle"

@@ -259,11 +259,21 @@ async function writeHtml(routePath, template, seo, content) {
 function renderBlogNavigation({ showBlogLink = false } = {}) {
   const blogLink = showBlogLink
     ? `<a class="blog-backLink" href="${escapeHtml(withBase("/blog/"))}">Blog</a>`
-    : "";
+    : `<span class="blog-backLink" aria-current="page">Blog</span>`;
   return `
     <header class="blog-siteHeader" aria-label="Primary">
       <nav class="blog-nav" aria-label="Blog navigation">
-        <a class="blog-homeLink" href="${escapeHtml(withBase("/"))}">Milad</a>
+        <a class="blog-homeLink" href="${escapeHtml(withBase("/"))}">
+          <svg class="blog-homeIcon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m3 9 9-7 9 7"></path>
+            <path d="M9 22V12h6v10"></path>
+            <path d="M21 9v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9"></path>
+          </svg>
+          <span>Milad</span>
+        </a>
+        <svg class="blog-breadcrumbChevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"></path>
+        </svg>
         ${blogLink}
       </nav>
     </header>`.trim();
