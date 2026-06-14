@@ -25,7 +25,7 @@ import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import "./story.css";
 
 const BASE = import.meta.env.BASE_URL;
-const TELEGRAM_HREF = "https://t.me/miloforge";
+const TELEGRAM_HREF = "https://t.me/milaforge";
 const AVATAR_SRC = `${BASE}images/avatar.jpg`;
 /** viewport-heights of scroll runway per scene — pacing of the scrub */
 const VH_PER_SCENE = 110;
